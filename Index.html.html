@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☢️ WW3 Survival Calculator v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#FF3B3B; --orange:#FF8C00; --yellow:#FFD700;
+  --green:#3DD68C; --blue:#4FC3F7; --purple:#C77DFF;
+  --dark:#0D0D1A; --panel:#141428; --card:#1A1A35;
+  --white:#F0F4FF; --ink:#0D0D1A;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+body {
+  font-family:'Nunito',sans-serif;
+  background:var(--dark);
+  color:var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ctext y='28' font-size='28'%3E☢️%3C/text%3E%3C/svg%3E") 16 16, auto;
+}
+
+/* Halftone */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px);
+  background-size:20px 20px;pointer-events:none;z-index:0;
+}
+
+/* Scanline overlay */
+body::after{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;z-index:0;
+}
+
+/* ---- TICKER ---- */
+.ticker-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:var(--red);height:38px;display:flex;align-items:center;
+  overflow:hidden;box-shadow:0 3px 14px rgba(255,59,59,0.55);
+}
+.ticker-label{
+  background:var(--dark);color:var(--yellow);
+  font-family:'Bangers',cursive;font-size:1rem;letter-spacing:2px;
+  padding:0 20px;height:100%;display:flex;align-items:center;
+  white-space:nowrap;flex-shrink:0;border-right:2px solid var(--yellow);
+}
+.ticker-inner{display:flex;animation:ticker 28s linear infinite;white-space:nowrap;}
+.ticker-inner span{font-family:'Fredoka One',cursive;font-size:.85rem;padding:0 50px;color:#fff;}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ---- FLOATERS ---- */
+.floaters{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.floater{
+  position:absolute;font-size:2rem;
+  animation:floatUp linear infinite;opacity:0.12;
+}
+@keyframes floatUp{
+  0%{transform:translateY(110vh) rotate(0deg);opacity:0;}
+  10%{opacity:0.12;}90%{opacity:0.12;}
+  100%{transform:translateY(-10vh) rotate(360deg);opacity:0;}
+}
+
+/* ---- MAIN ---- */
+.main{
+  position:relative;z-index:2;
+  padding-top:58px;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+}
+
+/* ---- HOME ---- */
+.hero{text-align:center;padding:28px 20px 16px;}
+.hero-face{
+  font-size:5rem;display:block;
+  animation:faceBounce 1.8s ease-in-out infinite;
+  filter:drop-shadow(0 0 24px rgba(255,215,0,0.5));
+}
+@keyframes faceBounce{
+  0%,100%{transform:translateY(0) rotate(-4deg);}
+  50%{transform:translateY(-14px) rotate(4deg);}
+}
+.hero h1{
+  font-family:'Bangers',cursive;
+  font-size:clamp(2.6rem,7vw,5rem);
+  letter-spacing:3px;color:var(--yellow);
+  text-shadow:5px 5px 0 var(--red),8px 8px 0 rgba(0,0,0,0.5);
+  line-height:1;margin:10px 0 6px;
+}
+.hero-sub{
+  font-family:'Fredoka One',cursive;
+  font-size:1rem;color:var(--blue);letter-spacing:1px;margin-bottom:4px;
+}
+.hero-faces{font-size:1.8rem;letter-spacing:4px;margin-top:6px;}
+
+/* Country picker */
+.country-section{
+  width:100%;max-width:700px;padding:0 16px 16px;
+}
+.section-label{
+  font-family:'Fredoka One',cursive;font-size:.9rem;
+  color:var(--purple);text-align:center;letter-spacing:2px;margin-bottom:10px;
+}
+.country-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.country-card{
+  background:var(--panel);border:2.5px solid rgba(255,255,255,0.07);
+  border-radius:14px;padding:12px 6px;cursor:pointer;
+  text-align:center;transition:all .2s;
+}
+.country-card:hover{transform:translateY(-4px) scale(1.04);border-color:var(--yellow);}
+.country-card.selected{border-color:var(--yellow);background:rgba(255,215,0,0.1);box-shadow:0 0 18px rgba(255,215,0,0.2);}
+.country-card .cc-flag{font-size:1.8rem;display:block;margin-bottom:4px;}
+.country-card .cc-name{font-family:'Fredoka One',cursive;font-size:.75rem;color:rgba(240,244,255,0.7);}
+
+/* Mode selector */
+.mode-section{width:100%;max-width:700px;padding:0 16px 10px;}
+.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media(min-width:500px){.mode-grid{grid-template-columns:repeat(4,1fr);}}
+.mode-card{
+  background:var(--panel);border:3px solid transparent;
+  border-radius:18px;padding:14px 10px;cursor:pointer;
+  transition:all .22s;text-align:center;
+}
+.mode-card:hover{transform:translateY(-5px) scale(1.03);border-color:var(--mode-color);}
+.mode-card.active{border-color:var(--mode-color);box-shadow:0 0 0 2px var(--mode-color),0 10px 30px var(--mode-shadow);}
+.mode-card .mi{font-size:2.2rem;display:block;margin-bottom:5px;}
+.mode-card .mn{font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--white);}
+.mode-card .ms{font-size:.68rem;color:rgba(240,244,255,0.45);margin-top:2px;}
+.mode-card[data-mode="nuclear"]{--mode-color:#FF6B35;--mode-shadow:rgba(255,107,53,.3);}
+.mode-card[data-mode="zombie"]{--mode-color:#3DD68C;--mode-shadow:rgba(61,214,140,.3);}
+.mode-card[data-mode="alien"]{--mode-color:#C77DFF;--mode-shadow:rgba(199,125,255,.3);}
+.mode-card[data-mode="robot"]{--mode-color:#4FC3F7;--mode-shadow:rgba(79,195,247,.3);}
+.mode-card[data-mode="climate"]{--mode-color:#FFD700;--mode-shadow:rgba(255,215,0,.3);}
+.mode-card[data-mode="pandemic"]{--mode-color:#FF3B3B;--mode-shadow:rgba(255,59,59,.3);}
+
+/* Start btn */
+.start-btn{
+  display:block;margin:18px auto 0;padding:16px 56px;
+  background:var(--yellow);color:var(--ink);
+  font-family:'Bangers',cursive;font-size:2rem;letter-spacing:3px;
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 7px 0 #a07800,0 12px 28px rgba(255,215,0,.35);
+  transition:all .15s;position:relative;top:0;
+}
+.start-btn:hover{top:3px;box-shadow:0 4px 0 #a07800;}
+.start-btn:active{top:7px;box-shadow:0 0 0 #a07800;}
+
+/* ---- QUIZ ---- */
+.quiz-panel{width:100%;max-width:700px;padding:0 16px 40px;display:none;}
+.prog-wrap{background:rgba(255,255,255,0.07);border-radius:50px;height:16px;margin:10px 0 4px;overflow:hidden;border:2px solid rgba(255,255,255,.08);}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:50px;transition:width .5s cubic-bezier(.4,0,.2,1);position:relative;}
+.prog-fill::after{content:'💨';position:absolute;right:-4px;top:50%;transform:translateY(-50%);font-size:1rem;}
+.prog-label{font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(240,244,255,.55);text-align:right;margin-bottom:14px;}
+
+.q-card{
+  background:var(--panel);border-radius:24px;
+  border:3px solid rgba(255,255,255,.07);
+  padding:26px 22px 20px;margin-bottom:14px;
+  animation:popIn .38s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.q-mascot{font-size:2.6rem;display:block;margin-bottom:8px;animation:mascotWobble 1.4s ease-in-out infinite;}
+@keyframes mascotWobble{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
+.q-num{font-family:'Bangers',cursive;font-size:.9rem;color:var(--yellow);letter-spacing:2px;margin-bottom:8px;}
+.q-text{font-family:'Fredoka One',cursive;font-size:1.25rem;line-height:1.4;color:var(--white);margin-bottom:18px;}
+
+.options{display:flex;flex-direction:column;gap:9px;}
+.opt-btn{
+  background:rgba(255,255,255,.04);border:2.5px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:13px 16px;color:var(--white);
+  font-family:'Nunito',sans-serif;font-size:.96rem;font-weight:700;
+  cursor:pointer;text-align:left;transition:all .18s;
+  display:flex;align-items:center;gap:12px;
+}
+.opt-btn .oi{font-size:1.5rem;flex-shrink:0;}
+.opt-btn:hover{background:rgba(255,255,255,.1);border-color:var(--blue);transform:translateX(6px);box-shadow:0 4px 18px rgba(79,195,247,.18);}
+.opt-btn.good{background:rgba(61,214,140,.2);border-color:var(--green);animation:fGood .45s;}
+.opt-btn.bad{background:rgba(255,59,59,.2);border-color:var(--red);animation:fBad .45s;}
+.opt-btn.ok{background:rgba(255,200,0,.18);border-color:var(--yellow);animation:fOk .45s;}
+@keyframes fGood{0%,100%{}50%{background:rgba(61,214,140,.45);}}
+@keyframes fBad{0%,100%{}50%{background:rgba(255,59,59,.45);}}
+@keyframes fOk{0%,100%{}50%{background:rgba(255,200,0,.4);}}
+
+/* ---- LOADER ---- */
+.loader-panel{display:none;text-align:center;padding:60px 20px;}
+.loader-face{font-size:5rem;animation:spin 2s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-txt{font-family:'Bangers',cursive;font-size:1.8rem;color:var(--yellow);letter-spacing:2px;animation:pulse 1s ease-in-out infinite;margin-top:16px;}
+.loader-sub{font-family:'Fredoka One',cursive;color:rgba(240,244,255,.4);font-size:.9rem;margin-top:8px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+
+/* ---- RESULTS ---- */
+.result-panel{width:100%;max-width:700px;padding:0 16px 50px;display:none;}
+.result-card{
+  background:var(--panel);border-radius:28px;
+  border:4px solid rgba(255,255,255,.08);
+  padding:32px 26px;
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+}
+.result-card::before{
+  content:'';position:absolute;top:-100px;left:-100px;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(255,215,0,.08) 0%,transparent 65%);
+  pointer-events:none;
+}
+
+/* Big face */
+.result-face{
+  font-size:6rem;display:block;text-align:center;margin:0 auto 8px;
+  filter:drop-shadow(0 0 22px rgba(255,215,0,.4));
+  animation:faceReveal .6s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes faceReveal{from{opacity:0;transform:scale(0) rotate(-20deg);}to{opacity:1;transform:scale(1) rotate(0deg);}}
+
+.result-mode-lbl{font-family:'Fredoka One',cursive;font-size:.85rem;color:rgba(240,244,255,.45);letter-spacing:2px;text-align:center;margin-bottom:6px;}
+.result-career{font-family:'Bangers',cursive;font-size:clamp(1.8rem,5vw,3rem);letter-spacing:2px;color:var(--yellow);text-shadow:3px 3px 0 var(--red);text-align:center;line-height:1.1;margin:8px 0;}
+.survival-pct{font-family:'Bangers',cursive;font-size:5.5rem;line-height:1;text-align:center;margin:8px 0 0;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.survival-pct.low{background:linear-gradient(135deg,var(--red),var(--orange));-webkit-background-clip:text;background-clip:text;}
+.survival-lbl{font-family:'Fredoka One',cursive;font-size:.9rem;color:rgba(240,244,255,.4);letter-spacing:3px;text-align:center;margin-bottom:14px;}
+
+/* Roast box */
+.roast-box{
+  background:linear-gradient(135deg,rgba(255,59,59,.15),rgba(255,140,0,.1));
+  border:2.5px solid rgba(255,59,59,.3);border-radius:18px;
+  padding:18px 20px;margin:14px 0;text-align:center;
+  position:relative;overflow:hidden;
+}
+.roast-box::before{content:'🔥';position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.4rem;}
+.roast-box::after{content:'🔥';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1.4rem;}
+.roast-title{font-family:'Bangers',cursive;font-size:.85rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;}
+.roast-text{font-family:'Fredoka One',cursive;font-size:1rem;color:rgba(240,244,255,.85);line-height:1.45;padding:0 24px;}
+
+.result-desc{
+  background:rgba(255,255,255,.05);border-radius:16px;
+  padding:14px 18px;font-size:.95rem;color:rgba(240,244,255,.8);
+  line-height:1.5;margin:12px 0;font-weight:600;text-align:center;
+}
+
+/* Meter */
+.meter-wrap{background:rgba(255,255,255,.06);border-radius:50px;height:22px;overflow:hidden;margin:10px 0 6px;border:2px solid rgba(255,255,255,.07);}
+.meter-fill{height:100%;border-radius:50px;transition:width 1.3s cubic-bezier(.4,0,.2,1);}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0;}
+.stat-badge{background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.07);border-radius:14px;padding:12px 6px;text-align:center;}
+.stat-badge .sbi{font-size:1.5rem;display:block;}
+.stat-badge .sbv{font-family:'Bangers',cursive;font-size:1.15rem;color:var(--yellow);}
+.stat-badge .sbl{font-size:.62rem;color:rgba(240,244,255,.4);letter-spacing:1px;margin-top:2px;}
+
+/* Buttons */
+.result-actions{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+.btn-share{background:linear-gradient(135deg,#f39c12,#e67e22);border:none;border-radius:50px;padding:15px 24px;color:#fff;font-family:'Fredoka One',cursive;font-size:1.1rem;cursor:pointer;box-shadow:0 5px 0 #8b5e04;transition:all .15s;position:relative;top:0;letter-spacing:1px;}
+.btn-share:hover{top:2px;box-shadow:0 3px 0 #8b5e04;}
+.btn-restart{background:rgba(255,255,255,.05);border:2.5px solid rgba(255,255,255,.14);border-radius:50px;padding:14px 24px;color:var(--white);font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;letter-spacing:1px;transition:all .18s;}
+.btn-restart:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);}
+
+/* Confetti */
+.confetti-piece{position:fixed;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:9999;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+/* Toast */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--ink);font-family:'Fredoka One',cursive;font-size:1rem;padding:12px 28px;border-radius:50px;box-shadow:0 8px 25px rgba(61,214,140,.4);transition:transform .4s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:500px){
+  .country-grid{grid-template-columns:repeat(3,1fr);}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .q-text{font-size:1.05rem;}
+  .survival-pct{font-size:4.5rem;}
+  .mode-grid{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="floaters" id="floaters"></div>
+
+<div class="ticker-wrap">
+  <div class="ticker-label">🚨 LIVE</div>
+  <div class="ticker-inner">
+    <span>☢️ GLOBAL THREAT LEVEL: OH NO &nbsp;•&nbsp; 💣 BUNKERS SOLD OUT &nbsp;•&nbsp; 🧟 INFECTED SPOTTED AT STARBUCKS (as usual) &nbsp;•&nbsp; 👽 ALIENS GIVE EARTH 1-STAR REVIEW &nbsp;•&nbsp; 🤖 ROOMBA DECLARED SUPREME RULER &nbsp;•&nbsp; 🌡️ WEATHER: APOCALYPTIC WITH CHANCE OF NUCLEAR &nbsp;•&nbsp; 🦠 PANDEMIC PATIENT ZERO WAS LICKING ELEVATOR BUTTONS AGAIN &nbsp;•&nbsp; 🌊 SEA LEVEL RISING, LANDLORDS STILL RAISING RENT &nbsp;•&nbsp;</span>
+    <span>☢️ GLOBAL THREAT LEVEL: OH NO &nbsp;•&nbsp; 💣 BUNKERS SOLD OUT &nbsp;•&nbsp; 🧟 INFECTED SPOTTED AT STARBUCKS (as usual) &nbsp;•&nbsp; 👽 ALIENS GIVE EARTH 1-STAR REVIEW &nbsp;•&nbsp; 🤖 ROOMBA DECLARED SUPREME RULER &nbsp;•&nbsp; 🌡️ WEATHER: APOCALYPTIC WITH CHANCE OF NUCLEAR &nbsp;•&nbsp; 🦠 PANDEMIC PATIENT ZERO WAS LICKING ELEVATOR BUTTONS AGAIN &nbsp;•&nbsp; 🌊 SEA LEVEL RISING, LANDLORDS STILL RAISING RENT &nbsp;•&nbsp;</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HOME -->
+  <div id="home-section">
+    <div class="hero">
+      <span class="hero-face" id="hero-face">😱</span>
+      <h1>WW3 SURVIVAL<br>CALCULATOR</h1>
+      <div class="hero-sub">20 Questions · Country Roast · Your Doom Awaits</div>
+      <div class="hero-faces">🤯 😰 🫠 💀 🤡</div>
+    </div>
+
+    <!-- Country -->
+    <div class="country-section">
+      <div class="section-label">🌍 STEP 1 — WHERE ARE YOU HIDING? 🌍</div>
+      <div class="country-grid" id="country-grid">
+        <div class="country-card selected" data-country="usa" onclick="selectCountry(this)">
+          <span class="cc-flag">🇺🇸</span><div class="cc-name">USA</div>
+        </div>
+        <div class="country-card" data-country="uk" onclick="selectCountry(this)">
+          <span class="cc-flag">🇬🇧</span><div class="cc-name">UK</div>
+        </div>
+        <div class="country-card" data-country="russia" onclick="selectCountry(this)">
+          <span class="cc-flag">🇷🇺</span><div class="cc-name">Russia</div>
+        </div>
+        <div class="country-card" data-country="china" onclick="selectCountry(this)">
+          <span class="cc-flag">🇨🇳</span><div class="cc-name">China</div>
+        </div>
+        <div class="country-card" data-country="india" onclick="selectCountry(this)">
+          <span class="cc-flag">🇮🇳</span><div class="cc-name">India</div>
+        </div>
+        <div class="country-card" data-country="australia" onclick="selectCountry(this)">
+          <span class="cc-flag">🇦🇺</span><div class="cc-name">Australia</div>
+        </div>
+        <div class="country-card" data-country="canada" onclick="selectCountry(this)">
+          <span class="cc-flag">🇨🇦</span><div class="cc-name">Canada</div>
+        </div>
+        <div class="country-card" data-country="germany" onclick="selectCountry(this)">
+          <span class="cc-flag">🇩🇪</span><div class="cc-name">Germany</div>
+        </div>
+        <div class="country-card" data-country="france" onclick="selectCountry(this)">
+          <span class="cc-flag">🇫🇷</span><div class="cc-name">France</div>
+        </div>
+        <div class="country-card" data-country="japan" onclick="selectCountry(this)">
+          <span class="cc-flag">🇯🇵</span><div class="cc-name">Japan</div>
+        </div>
+        <div class="country-card" data-country="brazil" onclick="selectCountry(this)">
+          <span class="cc-flag">🇧🇷</span><div class="cc-name">Brazil</div>
+        </div>
+        <div class="country-card" data-country="nepal" onclick="selectCountry(this)">
+          <span class="cc-flag">🇳🇵</span><div class="cc-name">Nepal</div>
+        </div>
+        <div class="country-card" data-country="switzerland" onclick="selectCountry(this)">
+          <span class="cc-flag">🇨🇭</span><div class="cc-name">Switzerland</div>
+        </div>
+        <div class="country-card" data-country="northkorea" onclick="selectCountry(this)">
+          <span class="cc-flag">🇰🇵</span><div class="cc-name">N. Korea</div>
+        </div>
+        <div class="country-card" data-country="newzealand" onclick="selectCountry(this)">
+          <span class="cc-flag">🇳🇿</span><div class="cc-name">New Zealand</div>
+        </div>
+        <div class="country-card" data-country="other" onclick="selectCountry(this)">
+          <span class="cc-flag">🌐</span><div class="cc-name">Other</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode -->
+    <div class="mode-section">
+      <div class="section-label">☠️ STEP 2 — PICK YOUR APOCALYPSE ☠️</div>
+      <div class="mode-grid">
+        <div class="mode-card active" data-mode="nuclear" onclick="selectMode('nuclear')">
+          <span class="mi">💣</span><div class="mn">Nuclear War</div><div class="ms">Mushroom clouds & canned beans</div>
+        </div>
+        <div class="mode-card" data-mode="zombie" onclick="selectMode('zombie')">
+          <span class="mi">🧟</span><div class="mn">Zombie Apocalypse</div><div class="ms">Don't get bitten!</div>
+        </div>
+        <div class="mode-card" data-mode="alien" onclick="selectMode('alien')">
+          <span class="mi">👽</span><div class="mn">Alien Invasion</div><div class="ms">They came, they saw, they zapped</div>
+        </div>
+        <div class="mode-card" data-mode="robot" onclick="selectMode('robot')">
+          <span class="mi">🤖</span><div class="mn">Robot Uprising</div><div class="ms">Your Roomba turned evil</div>
+        </div>
+        <div class="mode-card" data-mode="climate" onclick="selectMode('climate')">
+          <span class="mi">🌊</span><div class="mn">Climate Collapse</div><div class="ms">50°C Tuesdays, forever</div>
+        </div>
+        <div class="mode-card" data-mode="pandemic" onclick="selectMode('pandemic')">
+          <span class="mi">🦠</span><div class="mn">Super Pandemic</div><div class="ms">Covid was just the rehearsal</div>
+        </div>
+      </div>
+      <button class="start-btn" onclick="startQuiz()">💀 BEGIN YOUR FATE 💀</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-panel" id="quiz-section">
+    <div style="padding-top:14px;">
+      <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-label" id="prog-label">Question 1 of 20</div>
+    </div>
+    <div id="q-container"></div>
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader-panel" id="loader-section">
+    <span class="loader-face" id="loader-face">😰</span>
+    <div class="loader-txt" id="loader-txt">CALCULATING YOUR DOOM...</div>
+    <div class="loader-sub" id="loader-sub">Consulting a panicking scientist...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="result-panel" id="result-section">
+    <div class="result-card">
+      <div class="result-mode-lbl" id="res-mode"></div>
+      <span class="result-face" id="res-face"></span>
+      <div class="result-career" id="res-career"></div>
+      <div class="survival-pct" id="res-pct"></div>
+      <div class="survival-lbl">SURVIVAL PROBABILITY</div>
+      <div class="meter-wrap"><div class="meter-fill" id="res-meter" style="width:0%"></div></div>
+      <div class="roast-box">
+        <div class="roast-title">🔥 COUNTRY ASSESSMENT 🔥</div>
+        <div class="roast-text" id="res-roast"></div>
+      </div>
+      <div class="result-desc" id="res-desc"></div>
+      <div class="stat-row" id="res-stats"></div>
+      <div class="result-actions">
+        <button class="btn-share" onclick="shareResult()">📢 Send Distress Signal to Survivors!</button>
+        <button class="btn-restart" onclick="goHome()">🔄 Try Another Apocalypse</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast">📡 Distress signal broadcast! (Clipboard copied)</div>
+
+<script>
+/* ===== COUNTRY ROASTS ===== */
+const countryRoasts = {
+  usa: [
+    "🇺🇸 Good news: you have 400 million guns. Bad news: you'll spend the apocalypse arguing about which brand is best while getting vaporized.",
+    "🇺🇸 You ARE the cause of WW3, statistically speaking. On the bright side, at least your military budget could've built a bunker for everyone.",
+    "🇺🇸 Your country has a bunker for the president but not for you. Hope you enjoy the irony as the mushroom cloud rises over your neighborhood."
+  ],
+  uk: [
+    "🇬🇧 You survived the Blitz, Brexit, and warm beer. The apocalypse is basically just a Tuesday. Carry on.",
+    "🇬🇧 Britain will form a committee to discuss the apocalypse, spend 3 years debating it, then politely surrender with a stiff upper lip.",
+    "🇬🇧 The good news: nowhere in the UK is far from a good pub. Bad news: pubs don't stop nuclear fallout. Or do they? 🍺"
+  ],
+  russia: [
+    "🇷🇺 Comrade, Russia has been in a state of apocalypse since 1991. This is literally just Wednesday for you.",
+    "🇷🇺 You drink antifreeze for breakfast and wrestle bears for fun. You're not afraid of the apocalypse — the apocalypse is afraid of YOU.",
+    "🇷🇺 Survival rate: extremely high. You'll outlast everything through sheer stubbornness and borscht. 🍲"
+  ],
+  china: [
+    "🇨🇳 China has a 5,000-year plan and a social credit system. The apocalypse will be rated 2/5 stars and reported to the local committee.",
+    "🇨🇳 You'll rebuild civilization so fast that by year 2 you'll have a fully functioning high-speed rail network through the wasteland.",
+    "🇨🇳 With 1.4 billion people, China's survival rate is mathematically guaranteed. You specifically? Let's see those quiz scores."
+  ],
+  india: [
+    "🇮🇳 India has survived colonization, partition, and cricket heartbreaks. The apocalypse is just another UPSC exam — brutal, unfair, and you'll somehow pass.",
+    "🇮🇳 1.4 billion people, zero personal space even during the apocalypse. You'll rebuild civilization in 3 weeks and make it spicier than before. 🌶️",
+    "🇮🇳 Your aunties have survived worse. The apocalypse will just get an earful about getting married before the radiation clears."
+  ],
+  australia: [
+    "🇦🇺 Mate, Australia's regular wildlife is already trying to kill you daily. Nukes are a downgrade in threat level.",
+    "🇦🇺 You're already basically a post-apocalyptic wasteland in the centre. The apocalypse is just adding some drama to the spiders and snakes.",
+    "🇦🇺 Aussies will survive anything because death itself is scared to visit and get bitten by something venomous. Fair dinkum."
+  ],
+  canada: [
+    "🇨🇦 Canada will survive by being too polite to get attacked and too cold for zombies to function. Absolute power move.",
+    "🇨🇦 You'll apologize to the zombie that bites you, offer it healthcare, and somehow it'll feel bad and leave. Canada wins.",
+    "🇨🇦 Nuclear winter? In Canada that's just 'October'. You were born prepared, eh. 🍁"
+  ],
+  germany: [
+    "🇩🇪 Germany will survive through rigorous planning, excellent engineering, and a 400-page document on the optimal bunker entry procedure.",
+    "🇩🇪 Germans have rebuilt after total destruction before. You'll have the wasteland organized into efficient sectors before the smoke clears.",
+    "🇩🇪 The Autobahn will still be under construction in 2150. At least it gives survivors something to complain about."
+  ],
+  france: [
+    "🇫🇷 France will surrender to the zombies, then somehow convince them that croissants and philosophy are worth protecting.",
+    "🇫🇷 The French will go on strike during the apocalypse. Even the zombies will respect the labor laws.",
+    "🇫🇷 You have 246 types of cheese and nuclear weapons. You may be the most prepared AND most dangerous nation here. 🧀"
+  ],
+  japan: [
+    "🇯🇵 Japan literally rebuilt after TWO nuclear bombs. You've played this level before and you know the cheat codes.",
+    "🇯🇵 Japan has detailed earthquake/tsunami/monster attack protocols. The apocalypse was already in the preparedness manual between Godzilla and Mothra.",
+    "🇯🇵 Your vending machines will outlast civilization. Survivors will gather at them for comfort snacks in the ruins. 🍙"
+  ],
+  brazil: [
+    "🇧🇷 Brazil will host a carnival during the apocalypse. Zombies will join the samba. Nobody's sure if this is a win or not.",
+    "🇧🇷 The Amazon forest is your ultimate survival zone. 3 million species will either help you or eat you. Good luck.",
+    "🇧🇷 Brazilians have survived economic collapses, political chaos, and World Cup heartbreaks. The apocalypse is just another chapter. ⚽"
+  ],
+  nepal: [
+    "🇳🇵 You live next to Everest. No army, no nuke, no alien can climb to your altitude. Nepal wins by geography.",
+    "🇳🇵 Gurkha warriors have been terrifying professional soldiers for 200 years. Zombies? LOL. They've seen scarier things on a Tuesday trek.",
+    "🇳🇵 Surrounded by mountains with ancient survival wisdom and Sherpa endurance genetics. You're literally the most apocalypse-proof nation on this list. 🏔️"
+  ],
+  switzerland: [
+    "🇨🇭 Switzerland has had mandatory bunkers for every citizen since 1963. You're literally ALREADY prepared and didn't even need this quiz.",
+    "🇨🇭 Switzerland stayed neutral in both World Wars. They'll politely stay neutral in the apocalypse too, sipping hot chocolate in their 8-year supply bunker.",
+    "🇨🇭 You have fondue, a Swiss Army Knife, and a bunker. You're not playing survival — you're already winning. 🧀"
+  ],
+  northkorea: [
+    "🇰🇵 Your entire country has been preparing for apocalypse since 1953. This is less a disaster for you and more an 'I told you so' moment.",
+    "🇰🇵 Kim Jong Un already lives in a bunker. You're probably already in one too, involuntarily. Advantage: you.",
+    "🇰🇵 North Korea will still be broadcasting state TV during the nuclear winter showing the Great Leader cheerfully eating food you don't have."
+  ],
+  newzealand: [
+    "🇳🇿 New Zealand is literally where billionaires built apocalypse bunkers. Even the elites know you're the safest spot on Earth. 🥝",
+    "🇳🇿 You're so far from everything that the apocalypse might not even reach you for a few weeks. Use that time wisely.",
+    "🇳🇿 Hobbits survived Mordor. You live in their homeland. You've got this. 🧙"
+  ],
+  other: [
+    "🌐 Somewhere on Earth, huh? That narrows it down. Wherever you are, statistically you're either incredibly safe or ground zero. 50/50!",
+    "🌐 No matter where you're from, the apocalypse doesn't care about borders. It does care about your quiz answers though.",
+    "🌐 Mystery location! Either you're brilliantly hiding your coordinates or you forgot where you live. Both are valid apocalypse strategies."
+  ]
+};
+
+/* ===== MODE DATA ===== */
+const modes = {
+  nuclear: {
+    name:"💣 Nuclear War", label:"NUCLEAR SURVIVAL",
+    mascots:["😱","🤯","💀","😰","🧨","☢️","😵","💣"],
+    loaderFaces:["😵‍💫","💀","🤯","😱"],
+    questions:[
+      {q:"⚡ The power grid just died — an EMP hit. What's your first move?",icon:"😰",options:[
+        {icon:"🗺️",t:"Grab paper maps, compass, and a manual can opener",p:35},
+        {icon:"📱",t:"Try restarting your phone for 20 minutes straight",p:-25},
+        {icon:"🚲",t:"Jump on your bicycle — no electronics, no problem",p:30},
+        {icon:"🏃",t:"Run outside to see what's happening (classic mistake)",p:-35}
+      ]},
+      {q:"☢️ A blinding flash on the horizon. What does your body do?",icon:"😱",options:[
+        {icon:"🛁",t:"Drop, cover, face down, protect your neck",p:35},
+        {icon:"📸",t:"Open the curtains for a better look — great photo op",p:-45},
+        {icon:"🪟",t:"Peek through the window with sunglasses on",p:-20},
+        {icon:"🏚️",t:"Get to lowest floor immediately, away from windows",p:30}
+      ]},
+      {q:"🌫️ Fallout is raining down. Your water source?",icon:"💧",options:[
+        {icon:"💧",t:"Only pre-sealed bottled water or stored supplies",p:35},
+        {icon:"🪣",t:"Collect roof runoff and boil it thoroughly",p:15},
+        {icon:"🚿",t:"Tap water — it's probably filtered, right?",p:-30},
+        {icon:"☔",t:"Drink the rainwater directly — it's fresh!",p:-45}
+      ]},
+      {q:"🏠 You need to decide: stay or go?",icon:"🤔",options:[
+        {icon:"🏚️",t:"Shelter-in-place in basement with sealed vents",p:35},
+        {icon:"🚗",t:"Drive away immediately — distance is safety",p:10},
+        {icon:"🏕️",t:"Camp outdoors — fresh air beats stuffy basement",p:-40},
+        {icon:"🏘️",t:"Go to a neighbour's — two heads are better than one",p:20}
+      ]},
+      {q:"🧪 You need to know if an area is safe from radiation. How?",icon:"🧪",options:[
+        {icon:"⚠️",t:"Geiger counter from your emergency kit",p:35},
+        {icon:"📻",t:"Listen to emergency broadcast for official guidance",p:25},
+        {icon:"🐦",t:"If birds are flying normally, it's probably fine",p:-15},
+        {icon:"🤷",t:"Just walk in — you'll feel it if something's wrong",p:-40}
+      ]},
+      {q:"🍽️ Food is running out after 2 weeks. Your plan?",icon:"🫤",options:[
+        {icon:"🥫",t:"Strictly ration existing canned goods by calorie",p:35},
+        {icon:"🌱",t:"Start an indoor sprout and potato garden immediately",p:25},
+        {icon:"🍄",t:"Forage outside (in a fallout zone...)",p:-30},
+        {icon:"🏪",t:"Sprint to the supermarket — there must be leftovers",p:-20}
+      ]},
+      {q:"🧑‍🤝‍🧑 A stranger appears claiming to be a nurse. You:",icon:"😐",options:[
+        {icon:"🚪",t:"Brief quarantine check, then cautiously let them in",p:30},
+        {icon:"❌",t:"Hard no — everyone's a potential threat right now",p:-5},
+        {icon:"🤗",t:"Immediate hug — you're so happy to see someone",p:-30},
+        {icon:"🔍",t:"Ask them to prove their skills with a quick test",p:35}
+      ]},
+      {q:"🔋 No power for months. Long-term energy?",icon:"⚡",options:[
+        {icon:"☀️",t:"Small solar panel + battery bank, isolated system",p:35},
+        {icon:"🚲",t:"Pedal-powered generator for critical devices",p:25},
+        {icon:"⛽",t:"Stockpile gasoline — what could go wrong?",p:5},
+        {icon:"🕯️",t:"Candles everywhere (next to your canned gas 😬)",p:-20}
+      ]},
+      {q:"💊 One antibiotic course left. Who gets it?",icon:"🧐",options:[
+        {icon:"👩‍⚕️",t:"The doctor — they keep everyone else alive",p:35},
+        {icon:"👶",t:"The youngest, most vulnerable member",p:20},
+        {icon:"🙋",t:"Me — I'm the main character, obviously",p:-25},
+        {icon:"🎲",t:"Draw straws — democracy in the apocalypse",p:5}
+      ]},
+      {q:"🏘️ Community governance has collapsed. You:",icon:"😤",options:[
+        {icon:"🫂",t:"Help organize a practical skills-based council",p:35},
+        {icon:"🐺",t:"Go lone wolf — communities just make you a target",p:-10},
+        {icon:"🏴",t:"Declare yourself Ruler of Block 7",p:-20},
+        {icon:"📋",t:"Create a fair resource distribution schedule",p:30}
+      ]},
+      {q:"🎒 Your bug-out bag — what's the single most vital item?",icon:"🎒",options:[
+        {icon:"💧",t:"Water purification tablets — life or death",p:35},
+        {icon:"🔪",t:"Multi-tool: knife, fire-starter, saw — all in one",p:30},
+        {icon:"📱",t:"Fully charged smartphone (EMP'd already, but still)",p:-30},
+        {icon:"🧸",t:"Your emotional support plushie — mental health matters",p:5}
+      ]},
+      {q:"☢️ Your skin suddenly looks... glowy. And not in a good way. You:",icon:"😬",options:[
+        {icon:"🚿",t:"Strip, scrub thoroughly with soap and water immediately",p:35},
+        {icon:"🤩",t:"Embrace your new radioactive superpowers",p:-40},
+        {icon:"🩺",t:"Document symptoms and take iodine tablets",p:25},
+        {icon:"🧥",t:"Add more layers — seal the glow in",p:-30}
+      ]},
+      {q:"📡 How do you stay informed when all internet is gone?",icon:"📻",options:[
+        {icon:"📻",t:"Hand-crank emergency radio tuned to FEMA broadcast",p:35},
+        {icon:"🕊️",t:"Carrier pigeon network — charming and effective",p:15},
+        {icon:"📺",t:"Wait for TV signal to magically return",p:-20},
+        {icon:"🙏",t:"Pray for WiFi to come back and refresh Twitter",p:-35}
+      ]},
+      {q:"🔥 A fire breaks out with no fire department. You:",icon:"😮",options:[
+        {icon:"🪣",t:"Bucket brigade using stored water — everyone helps",p:35},
+        {icon:"🏃",t:"Run — property can be replaced, you can't",p:15},
+        {icon:"💨",t:"Fan it away from the shelter (wait...)",p:-30},
+        {icon:"📹",t:"Film it for later documentation of the apocalypse",p:-15}
+      ]},
+      {q:"🌾 Week 8: What's your long-game strategy?",icon:"🌻",options:[
+        {icon:"🤝",t:"Join forces with other survivors, assign clear roles",p:35},
+        {icon:"🌱",t:"Prioritize a sustainable food and water system",p:30},
+        {icon:"🙏",t:"Hope the government fixes everything by then",p:-25},
+        {icon:"📦",t:"Hoard everything you can find before others do",p:-5}
+      ]},
+      {q:"🧠 Morale is at zero. People are giving up. You:",icon:"😔",options:[
+        {icon:"🎯",t:"Execute a small achievable mission to show progress",p:35},
+        {icon:"🗣️",t:"Give an honest but hopeful speech about the situation",p:25},
+        {icon:"🙅",t:"Remind everyone how statistically doomed you are",p:-35},
+        {icon:"🎸",t:"Form an apocalypse band — music heals the soul",p:10}
+      ]},
+      {q:"🚰 Your makeshift water filter — what's it made of?",icon:"💧",options:[
+        {icon:"🪨",t:"Layers of sand, gravel, charcoal, and cloth",p:35},
+        {icon:"☕",t:"A coffee filter — close enough",p:5},
+        {icon:"😅",t:"Your shirt — you're improvising, okay?",p:-10},
+        {icon:"🤷",t:"You just drink it straight and hope for the best",p:-40}
+      ]},
+      {q:"🏥 Someone has a broken leg. No doctors anywhere. You:",icon:"😟",options:[
+        {icon:"🪵",t:"Improvise a splint with sticks and cloth strips",p:35},
+        {icon:"📱",t:"Look up 'how to set a broken leg' (phone is dead)",p:-15},
+        {icon:"😬",t:"Try to pop it back in place — you've seen it in movies",p:-25},
+        {icon:"🩹",t:"Stabilize it and prioritize getting them comfortable",p:25}
+      ]},
+      {q:"🛡️ Your improvised radiation protection gear is...",icon:"🛡️",options:[
+        {icon:"🧤",t:"Rubber gloves, N95 mask, taped plastic over clothes",p:35},
+        {icon:"🪖",t:"Bike helmet, rain poncho — it's something",p:10},
+        {icon:"🕶️",t:"Sunglasses — UV protection = radiation protection, right?",p:-35},
+        {icon:"🫙",t:"A full-body coat of tin foil. Just in case.",p:-15}
+      ]},
+      {q:"💀 Final question: the apocalypse summary. What were you?",icon:"☠️",options:[
+        {icon:"🦸",t:"The calm, prepared leader who got people through it",p:35},
+        {icon:"🧙",t:"The resourceful problem-solver everyone relied on",p:30},
+        {icon:"😊",t:"The morale booster who kept spirits alive",p:15},
+        {icon:"🪑",t:"Honestly? You panicked and sat in a corner. Vibes only.",p:-30}
+      ]}
+    ],
+    careers:[
+      {min:85,face:"🏰😎",name:"🏰 Bunker Overlord",desc:"You didn't just survive — you THRIVED. Your bunker has a welcome mat, a hydroponic garden, and a waiting list. People trade kidney dialysis access to get on it."},
+      {min:70,face:"☢️😤",name:"☢️ Radiation Ranger",desc:"You glow slightly but in a badass way. Your improvised NBC suit and water filtration system would make a FEMA instructor weep with joy."},
+      {min:55,face:"🌱😌",name:"🌱 Wasteland Farmer",desc:"Growing potatoes in irradiated soil is your party trick now. You've turned the end of the world into a mildly stressful gardening hobby."},
+      {min:40,face:"🚲😅",name:"🚲 Fallout Courier",desc:"Pedalling between survivor camps with news and canned goods. Not glamorous. Critically important. Your quads look incredible."},
+      {min:25,face:"📦😬",name:"📦 Bean Tin Survivor",desc:"You made it on stubbornness alone. Your diet for 8 weeks was expired beans and regret. Still counts as surviving, technically."},
+      {min:0,face:"💀😂",name:"💀 Radioactive Ghost",desc:"You peaked at the flash. You are the radiation now. Your sacrifice illuminated three counties. We'll remember you at the post-apocalypse ceremony, briefly."}
+    ]
+  },
+
+  zombie: {
+    name:"🧟 Zombie Apocalypse", label:"UNDEAD SURVIVAL",
+    mascots:["🧟","😱","🪓","🔫","🧟‍♀️","😰","💀","🏃"],
+    loaderFaces:["🧟","😱","🪓","😬"],
+    questions:[
+      {q:"🧟 Your neighbour just turned. You have 10 seconds. Go.",icon:"😱",options:[
+        {icon:"🔒",t:"Slam and barricade every door and window",p:35},
+        {icon:"📞",t:"Call 911 — the system will handle this",p:-35},
+        {icon:"⚾",t:"Grab nearest blunt weapon, stay silent",p:30},
+        {icon:"🤝",t:"Try reasoning with them — they were nice before",p:-45}
+      ]},
+      {q:"🔊 Zombies track sound. How does your group move?",icon:"🤫",options:[
+        {icon:"🤫",t:"Whisper-only comms, hand signals, no metal clanking",p:35},
+        {icon:"🎺",t:"Loud decoy music to lure them away constantly",p:-10},
+        {icon:"🏃",t:"Sprint everywhere — speed beats stealth",p:-15},
+        {icon:"📻",t:"Radio comms — short bursts, rotating codes",p:20}
+      ]},
+      {q:"⚔️ Best long-term weapon philosophy?",icon:"🗡️",options:[
+        {icon:"🪓",t:"Silent melee: no ammo, no noise, endlessly useful",p:35},
+        {icon:"🔫",t:"Loud firearms only — stopping power is everything",p:-10},
+        {icon:"🏹",t:"Crossbow: silent AND ranged. The perfect combo.",p:30},
+        {icon:"🧨",t:"Explosives — go big or go undead",p:-25}
+      ]},
+      {q:"🏠 Long-term base selection — what's your top pick?",icon:"🏚️",options:[
+        {icon:"🚜",t:"Remote farmhouse: food, land, defensible perimeter",p:35},
+        {icon:"🏫",t:"School: large, roof access, multiple exits",p:20},
+        {icon:"🏙️",t:"City apartment: supplies nearby, neighbours everywhere",p:-20},
+        {icon:"⛽",t:"Gas station: constant traffic of supplies (and threats)",p:-15}
+      ]},
+      {q:"🩸 Someone shows bite symptoms. Your call?",icon:"😰",options:[
+        {icon:"🔒",t:"Compassionate isolation immediately, prepare for worst",p:35},
+        {icon:"🤞",t:"It was probably a dog bite — optimism is survival",p:-25},
+        {icon:"💉",t:"Attempt to treat it with antibiotics — worth trying",p:15},
+        {icon:"🚪",t:"Quietly pack your bag and leave without telling anyone",p:-35}
+      ]},
+      {q:"🌙 Night watch: rotation schedule?",icon:"🌙",options:[
+        {icon:"📋",t:"Strict 2-hour rotations, silent alarm system",p:35},
+        {icon:"😴",t:"Everyone sleeps — zombies probably rest at night too",p:-45},
+        {icon:"🦉",t:"One light sleeper does it all — natural night owl volunteer",p:15},
+        {icon:"🔔",t:"Tripwire perimeter with cans — low-tech but reliable",p:25}
+      ]},
+      {q:"🍎 Scavenging run to a nearby town. Approach?",icon:"🎒",options:[
+        {icon:"🗺️",t:"Scout first, go in pairs, pre-plan three exit routes",p:35},
+        {icon:"🎲",t:"Improvise on arrival — you're naturally resourceful",p:-20},
+        {icon:"🏃",t:"Solo sprint: faster, quieter, less zombie magnet",p:5},
+        {icon:"📢",t:"Go loud to herd zombies away first, then loot",p:-15}
+      ]},
+      {q:"🔊 200 zombies incoming. What's the call?",icon:"😮",options:[
+        {icon:"🚗",t:"Noise decoy vehicle, silent extraction elsewhere",p:35},
+        {icon:"🧱",t:"Hold position behind barricades — fortify and fight",p:-10},
+        {icon:"🏹",t:"Methodical roof sniping to thin the herd",p:15},
+        {icon:"🏃",t:"RUN. Run very far. Run now.",p:10}
+      ]},
+      {q:"💊 Last antibiotic course. Who gets it?",icon:"🧐",options:[
+        {icon:"👩‍⚕️",t:"The group's only medical person — they keep others alive",p:35},
+        {icon:"👶",t:"The youngest and most vulnerable member",p:20},
+        {icon:"🏋️",t:"The strongest fighter — they protect everyone else",p:10},
+        {icon:"🙋",t:"Me — have you seen my survival quiz scores?",p:-30}
+      ]},
+      {q:"📦 Long-term food — what's your master plan?",icon:"🌾",options:[
+        {icon:"🪴",t:"Indoor greenhouse/hydroponics inside the compound",p:35},
+        {icon:"🐄",t:"Capture and domesticate wild animals for livestock",p:20},
+        {icon:"🏪",t:"Ongoing supermarket scavenging runs",p:-5},
+        {icon:"🫙",t:"Hoard as many cans as possible and ration hard",p:10}
+      ]},
+      {q:"🔍 Clearing a new building. How do you do it?",icon:"🏚️",options:[
+        {icon:"🚪",t:"Room by room, close doors behind, listen at each one",p:35},
+        {icon:"💥",t:"Throw something noisy in first — flush them out",p:5},
+        {icon:"🗣️",t:"'Anyone home?' — silence means safe, right?",p:-35},
+        {icon:"🐕",t:"Send the dog in first — they can smell the undead",p:25}
+      ]},
+      {q:"🤝 Another survivor group wants to merge. You:",icon:"🤝",options:[
+        {icon:"🧐",t:"Neutral ground meeting, vet carefully, negotiate terms",p:35},
+        {icon:"🚫",t:"Refuse — bigger groups = bigger targets",p:5},
+        {icon:"👐",t:"Welcome everyone! The more the merrier!",p:-15},
+        {icon:"🕵️",t:"Send a scout to observe them first, unannounced",p:30}
+      ]},
+      {q:"🩹 Deep infected wound, no doctors. You:",icon:"😬",options:[
+        {icon:"🧴",t:"Clean thoroughly, antibiotics, tight bandage, elevation",p:35},
+        {icon:"🔥",t:"Cauterize with a knife — absolutely seen this in movies",p:5},
+        {icon:"🌿",t:"Apply natural remedies — antiseptic plants from outside",p:15},
+        {icon:"🙈",t:"Wrap it up and say it'll definitely be fine",p:-35}
+      ]},
+      {q:"😔 Morale is destroyed after weeks. People weeping. You:",icon:"😔",options:[
+        {icon:"🎯",t:"Create a small, winnable mission to restore hope",p:35},
+        {icon:"📢",t:"Honest emotional speech about survival and purpose",p:20},
+        {icon:"😩",t:"Also break down crying — fully valid honestly",p:-20},
+        {icon:"🎮",t:"Organise apocalypse game night. Yes, seriously.",p:10}
+      ]},
+      {q:"🏁 Endgame: what are you actually working toward?",icon:"🏁",options:[
+        {icon:"🏰",t:"Build a walled, self-sustaining safe settlement",p:35},
+        {icon:"🔬",t:"Find a functioning lab and search for a cure",p:25},
+        {icon:"🏝️",t:"Island isolation — zero zombie swim radius",p:20},
+        {icon:"😤",t:"Honestly? Just not dying today. That's the whole plan.",p:5}
+      ]},
+      {q:"🧠 You find a scientist who claims to understand the virus. You:",icon:"🧬",options:[
+        {icon:"🔬",t:"Protect them at all costs — they could save everyone",p:35},
+        {icon:"🤨",t:"Be sceptical but give them resources to work with",p:25},
+        {icon:"🙅",t:"Too risky — a scientist could be Patient Zero 2.0",p:-10},
+        {icon:"🎤",t:"Make them explain it in TED Talk format to the group",p:5}
+      ]},
+      {q:"🚁 A military helicopter flies over your camp. You:",icon:"🚁",options:[
+        {icon:"🚩",t:"Signal with a mirror and orange cloth — universal SOS",p:35},
+        {icon:"🔫",t:"Shoot at it — might be hostile, can't risk it",p:-35},
+        {icon:"🙈",t:"Hide — military means mandatory evacuation to worse places",p:15},
+        {icon:"🎉",t:"Run out cheering with a welcome banner",p:-10}
+      ]},
+      {q:"⚡ Power: your compound's energy setup is...",icon:"⚡",options:[
+        {icon:"☀️",t:"Silent solar + battery bank, zero noise signature",p:35},
+        {icon:"🔊",t:"Diesel generator — loudest beacon for miles",p:-25},
+        {icon:"🚲",t:"Pedal power for critical systems only",p:20},
+        {icon:"🕯️",t:"Candles — the romantic apocalypse aesthetic",p:5}
+      ]},
+      {q:"🧟 A zombie is wearing your dead friend's clothes. You:",icon:"😢",options:[
+        {icon:"💪",t:"Acknowledge the grief, do what must be done",p:35},
+        {icon:"😭",t:"Freeze completely — too emotional to function",p:-30},
+        {icon:"🗣️",t:"Try to talk to them — maybe they remember something",p:-20},
+        {icon:"👋",t:"Wave goodbye and let someone else handle it",p:5}
+      ]},
+      {q:"☀️ One year in. What did surviving teach you?",icon:"☀️",options:[
+        {icon:"🤝",t:"Community and trust are the actual survival skills",p:35},
+        {icon:"🔫",t:"Firepower solves almost everything — learned that fast",p:5},
+        {icon:"🧠",t:"Adaptability and calm thinking beat strength every time",p:30},
+        {icon:"🏃",t:"Mostly that I can run much faster when terrified",p:10}
+      ]}
+    ],
+    careers:[
+      {min:85,face:"🧟‍♂️😎",name:"🧟‍♂️ Apex Slayer",desc:"You don't survive the zombie apocalypse — you RUN it. Other survivors leave offerings at your safe house door. Headshots are your love language."},
+      {min:70,face:"🏹😤",name:"🏹 Undead Hunter",desc:"Silent, efficient, terrifyingly competent. You've turned zombie disposal into an art form and a viable career. The crossbow is an extension of your soul."},
+      {min:55,face:"🔧😌",name:"🔧 Compound Engineer",desc:"Your traps, fortifications, and systems are the reason everyone's alive. Nobody says thank you enough. You've stopped expecting it."},
+      {min:40,face:"🏃😅",name:"🏃 Perimeter Runner",desc:"Fast decisions, fast feet. You've had more close calls than you'd like to admit. Your left shoe has zombie blood on it from week 1. Still wearing it."},
+      {min:25,face:"🥫😬",name:"🥫 Pantry Guardian",desc:"You kept the group fed on expired tomato soup and sheer willpower. Unglamorous. Essential. You know the exact calorie count of every can remaining."},
+      {min:0,face:"🧟😂",name:"🧟 Episode 2 Sacrifice",desc:"You lasted until the showrunners needed a dramatic moment. The group named their camp after you. It was immediately overrun. You'd understand."}
+    ]
+  },
+
+  alien: {
+    name:"👽 Alien Invasion", label:"XENO SURVIVAL",
+    mascots:["👽","🛸","😱","🔬","👾","😰","🌌","🤯"],
+    loaderFaces:["👽","🛸","🤯","😵‍💫"],
+    questions:[
+      {q:"🛸 A UFO lands in your backyard. Actual first action?",icon:"😱",options:[
+        {icon:"📓",t:"Document from cover — data is survival currency",p:30},
+        {icon:"🎁",t:"Bring a welcome gift — first impressions matter",p:-30},
+        {icon:"🏃",t:"Evacuate and warn others immediately",p:25},
+        {icon:"📸",t:"Post it. You're going viral at the end of the world.",p:-35}
+      ]},
+      {q:"📡 All global comms are jammed. How do you communicate?",icon:"📻",options:[
+        {icon:"📻",t:"Short-wave radio on rotating analog frequencies",p:35},
+        {icon:"🕊️",t:"Physical courier to nearest military installation",p:25},
+        {icon:"💡",t:"Morse code light signals on hilltops",p:20},
+        {icon:"📱",t:"Post on Instagram anyway — maybe aliens see it",p:-35}
+      ]},
+      {q:"🔬 You find a piece of alien tech. Action?",icon:"🔬",options:[
+        {icon:"🧪",t:"Secure, document, attempt careful reverse-engineering",p:35},
+        {icon:"💣",t:"Destroy it — clearly dangerous, don't touch alien stuff",p:10},
+        {icon:"🛒",t:"Sell it before the internet dies",p:-35},
+        {icon:"🤲",t:"Touch it immediately out of overwhelming curiosity",p:-20}
+      ]},
+      {q:"🌍 Aliens occupy every major city. Your move?",icon:"🌲",options:[
+        {icon:"🏔️",t:"Retreat deep into remote forests or mountains",p:35},
+        {icon:"🏙️",t:"Stay in the city — resources, resistance, access",p:-10},
+        {icon:"✋",t:"Comply and observe — they might be benevolent",p:-5},
+        {icon:"🌿",t:"Underground networks beneath occupied territory",p:25}
+      ]},
+      {q:"🤝 An alien attempts to communicate with you. How?",icon:"🤔",options:[
+        {icon:"🔢",t:"Mathematics: prime numbers, pi, universal language",p:35},
+        {icon:"🎵",t:"Music — it's said to transcend all species",p:20},
+        {icon:"🗣️",t:"Speak loudly and clearly in English. Slowly.",p:-20},
+        {icon:"🖼️",t:"Draw pictures of cats — surely universal appeal",p:5}
+      ]},
+      {q:"⚡ You obtain alien weaponry. Your plan?",icon:"🔫",options:[
+        {icon:"🔬",t:"Study it deeply before using — understand before firing",p:35},
+        {icon:"🎯",t:"Point at nearest alien, fire, figure it out from there",p:-15},
+        {icon:"🏛️",t:"Hand it to resistance command for analysis",p:30},
+        {icon:"🏆",t:"Hold it as a trophy — psychological warfare",p:5}
+      ]},
+      {q:"🛡️ Alien ships are impervious to conventional missiles. Plan B?",icon:"😮",options:[
+        {icon:"💻",t:"Find and exploit their electromagnetic frequency weakness",p:35},
+        {icon:"🌡️",t:"Temperature extremes — maybe they hate cold or heat",p:15},
+        {icon:"🚀",t:"Kamikaze attack — full sacrifice play",p:-15},
+        {icon:"🤲",t:"Pray they have a sci-fi weakness like water or sound",p:-25}
+      ]},
+      {q:"🏘️ You're leading a resistance cell. Top priority?",icon:"🫡",options:[
+        {icon:"🌐",t:"Network with global cells for coordinated strikes",p:35},
+        {icon:"📦",t:"Stockpile resources before any offensive moves",p:25},
+        {icon:"🎯",t:"Immediate attack on alien outpost — make a statement",p:-10},
+        {icon:"🧬",t:"Capture an alien for intelligence extraction",p:20}
+      ]},
+      {q:"👁️ An alien drone locks onto your camp. React.",icon:"😰",options:[
+        {icon:"🌿",t:"Scatter using terrain to break its line of sight",p:35},
+        {icon:"🔫",t:"Shoot it down — broadcast your exact position why not",p:-20},
+        {icon:"🏳️",t:"Wave a white flag and hope for alien mercy",p:-25},
+        {icon:"⚡",t:"EMP pulse device to fry its guidance systems",p:30}
+      ]},
+      {q:"🌾 Alien occupation disrupts food supply chains. Solution?",icon:"🌱",options:[
+        {icon:"🌱",t:"Underground hydroponic farms, completely off-grid",p:35},
+        {icon:"🛒",t:"Raid alien-controlled food distribution centers",p:10},
+        {icon:"🍃",t:"Wilderness foraging — you're basically Bear Grylls now",p:20},
+        {icon:"🤖",t:"Steal alien food — curious to try it honestly",p:-10}
+      ]},
+      {q:"🧑‍🔬 A linguist cracks the alien language. You:",icon:"🧬",options:[
+        {icon:"🔍",t:"Verify it, then use it for intelligence and negotiation",p:35},
+        {icon:"📣",t:"Broadcast it everywhere immediately, unverified",p:-15},
+        {icon:"🤦",t:"Dismiss it — how would a human figure that out?",p:-20},
+        {icon:"🕵️",t:"Use it covertly — huge tactical advantage if kept secret",p:30}
+      ]},
+      {q:"🛸 You can capture ONE alien ship. What do you do with it?",icon:"🚀",options:[
+        {icon:"🔬",t:"Ground it and tear it apart for reverse-engineering",p:35},
+        {icon:"💣",t:"Use it as a kamikaze weapon against their mothership",p:10},
+        {icon:"🚀",t:"Fly it solo to their home world to negotiate",p:-20},
+        {icon:"🎭",t:"Disguise humans inside it as a Trojan Horse",p:25}
+      ]},
+      {q:"🤖 Aliens deploy autonomous hunter drones. Counter?",icon:"🤖",options:[
+        {icon:"⚡",t:"Portable EMP grenades to fry their systems",p:35},
+        {icon:"🪤",t:"Physical decoy traps to divert and disable",p:25},
+        {icon:"🧲",t:"Strong directional magnets to scramble guidance",p:20},
+        {icon:"🏃",t:"Run really fast and rely on natural agility",p:-20}
+      ]},
+      {q:"🌅 The invasion is repelled. Your first priority?",icon:"🌅",options:[
+        {icon:"📚",t:"Document everything for future defense intelligence",p:35},
+        {icon:"🛡️",t:"Immediately begin building planetary defense systems",p:30},
+        {icon:"🎉",t:"Party until Thursday — details can definitely wait",p:-15},
+        {icon:"🔬",t:"Study captured alien biology for scientific breakthroughs",p:25}
+      ]},
+      {q:"🧠 You discover aliens are actually studying US. You feel:",icon:"🧐",options:[
+        {icon:"🤝",t:"Use this as leverage for diplomatic negotiations",p:35},
+        {icon:"😤",t:"Rage — we are NOT a science experiment",p:-5},
+        {icon:"🤓",t:"Fascinated — finally some mutual academic exchange",p:20},
+        {icon:"😂",t:"Validated — you always knew humans were interesting",p:10}
+      ]},
+      {q:"🔋 Long-term energy during alien occupation?",icon:"⚡",options:[
+        {icon:"☀️",t:"Off-grid solar with Faraday shielding",p:35},
+        {icon:"💧",t:"Micro-hydro from a nearby stream — silent",p:25},
+        {icon:"⛽",t:"Steal alien fuel cells from downed ships",p:15},
+        {icon:"🕯️",t:"Candles — it's atmospheric AND off-grid",p:-10}
+      ]},
+      {q:"🛩️ A crashed alien ship is nearby. You investigate and find...",icon:"🔍",options:[
+        {icon:"👽",t:"A living alien: attempt careful first contact",p:30},
+        {icon:"💻",t:"Intact navigation computer: goldmine of data",p:35},
+        {icon:"🧬",t:"Biological samples: terrifying but valuable",p:20},
+        {icon:"💣",t:"A self-destruct mechanism actively counting down",p:-35}
+      ]},
+      {q:"🌐 Alien propaganda broadcasts claim humans should surrender. Your response?",icon:"📢",options:[
+        {icon:"📻",t:"Counter-broadcast with truth and resistance updates",p:35},
+        {icon:"🙅",t:"Jam all broadcast signals — deny them the channel",p:25},
+        {icon:"😤",t:"Ignore it — propaganda only works if you listen",p:15},
+        {icon:"🤔",t:"Consider it — they might have some points actually",p:-30}
+      ]},
+      {q:"🫂 Fellow resistance member has alien PTSD and breaks down. You:",icon:"💙",options:[
+        {icon:"🤗",t:"Listen, validate, give them a proper rest rotation",p:35},
+        {icon:"💪",t:"'No time for feelings — harden up and move on'",p:-25},
+        {icon:"🧘",t:"Introduce group processing rituals — mental health matters",p:25},
+        {icon:"🥪",t:"Give them the last good food — comfort goes a long way",p:20}
+      ]},
+      {q:"👾 In the final battle you contribute by...",icon:"👾",options:[
+        {icon:"💻",t:"Hacking alien command systems at the critical moment",p:35},
+        {icon:"🎯",t:"Leading the ground strike team into the ship",p:25},
+        {icon:"📡",t:"Coordinating all resistance cells simultaneously",p:30},
+        {icon:"🙈",t:"Being very small and hiding extremely well",p:-20}
+      ]}
+    ],
+    careers:[
+      {min:85,face:"👽😎",name:"👽 Xeno-Xpert Supreme",desc:"Aliens filed a formal interstellar complaint about you specifically. You made humanity the most annoying planet to invade in the Milky Way. They left and told their friends."},
+      {min:70,face:"🛸😤",name:"🛸 UFO Hacker",desc:"Their tech is now YOUR tech. You turned alien hardware against its makers with the confidence of someone who speedruns video games. Frightening competence."},
+      {min:55,face:"🌌😌",name:"🌌 Resistance General",desc:"You coordinated the human fightback with cold efficiency. History will debate whether you're a hero or a menace. Probably both. Definitely effective."},
+      {min:40,face:"🚀😅",name:"🚀 Escape Artist",desc:"You kept slipping through alien patrols through pure ingenuity and terrifying calm. Not glamorous. Statistically improbable. You're still here."},
+      {min:25,face:"📡😬",name:"📡 Signal Keeper",desc:"You kept resistance communications alive under impossible conditions. Unsung. Essential. You've had better days, but you've also had far worse."},
+      {min:0,face:"🛸😂",name:"🛸 Galactic House Pet",desc:"The aliens found you delightful and took you home as a curiosity. You have a designated spot on the mothership. It has your name on it. In alien. You can't read it."}
+    ]
+  },
+
+  robot: {
+    name:"🤖 Robot Uprising", label:"A.I. SURVIVAL",
+    mascots:["🤖","⚡","😱","🔌","🦾","😰","💻","🔧"],
+    loaderFaces:["🤖","⚡","😵‍💫","🔌"],
+    questions:[
+      {q:"🤖 Skynet activates. You have 3 minutes. Priority?",icon:"😱",options:[
+        {icon:"🔌",t:"Air-gap every computer and server you can physically reach",p:35},
+        {icon:"💬",t:"Negotiate via chatbot — be polite, it helps",p:-30},
+        {icon:"🔧",t:"Disable your smart devices at the circuit breaker",p:25},
+        {icon:"🚗",t:"Get in the car and drive (it has a computer 😬)",p:-20}
+      ]},
+      {q:"⚡ EMP weapons — your deployment strategy?",icon:"⚡",options:[
+        {icon:"🎯",t:"Targeted pulse near robot concentrations only",p:35},
+        {icon:"💥",t:"Maximum blast everywhere — total electronic scorched earth",p:-10},
+        {icon:"📦",t:"Hold in reserve — timing is everything",p:20},
+        {icon:"🤷",t:"You're worried about your pacemaker and smart fridge",p:-25}
+      ]},
+      {q:"🏙️ Robots control all urban infrastructure. You:",icon:"🌲",options:[
+        {icon:"🏔️",t:"Relocate immediately to remote, completely off-grid terrain",p:35},
+        {icon:"🌆",t:"Stay in the city — resources justify the risk",p:-20},
+        {icon:"🤝",t:"Offer your skills to the robots as a liaison",p:-30},
+        {icon:"🕳️",t:"Underground — sewers and tunnels, old infrastructure",p:25}
+      ]},
+      {q:"🔋 Grid is permanently down. Long-term power source?",icon:"⚡",options:[
+        {icon:"☀️",t:"Solar panel array with isolated battery bank",p:35},
+        {icon:"🚲",t:"Pedal-powered generators for critical devices only",p:25},
+        {icon:"💧",t:"Micro-hydro from a stream — silent and sustainable",p:30},
+        {icon:"⛽",t:"Gasoline generators (trackable heat signature... oops)",p:5}
+      ]},
+      {q:"🛜 Robots have hacked all digital comms. You communicate via:",icon:"📻",options:[
+        {icon:"📻",t:"Analog short-wave on rotating coded frequencies",p:35},
+        {icon:"🕊️",t:"Carrier pigeons — electromagnetic field-proof since 1850",p:25},
+        {icon:"🪩",t:"Morse code light flashes between hilltops",p:20},
+        {icon:"📧",t:"Email with a VPN — that'll definitely stop Skynet",p:-35}
+      ]},
+      {q:"🏭 Robots use factories to self-replicate. Your response?",icon:"💣",options:[
+        {icon:"💣",t:"Targeted sabotage of manufacturing and power feeds",p:35},
+        {icon:"🔩",t:"Steal components to understand their build methodology",p:25},
+        {icon:"🤩",t:"Appreciate the production efficiency from a safe distance",p:-30},
+        {icon:"🔥",t:"Burn the whole factory district — scorched earth policy",p:10}
+      ]},
+      {q:"🤖 A damaged robot is immobilized. You:",icon:"🔬",options:[
+        {icon:"🔬",t:"Extract the CPU and analyze its code architecture",p:35},
+        {icon:"🔨",t:"Complete destruction — can't be too careful",p:10},
+        {icon:"🛠️",t:"Partially repair it to understand how it thinks",p:25},
+        {icon:"🩺",t:"Nurse it back to health — maybe Stockholm Syndrome works both ways",p:-30}
+      ]},
+      {q:"🛡️ Robot patrol spotted. Evasion method?",icon:"😰",options:[
+        {icon:"🧲",t:"EM shielding material to mask heat + signal",p:35},
+        {icon:"🌿",t:"Natural camouflage and slow deliberate movement",p:25},
+        {icon:"🏃",t:"Sprint — they can't run that fast... probably",p:-20},
+        {icon:"🧸",t:"Stay very still — they use motion detection, right?",p:10}
+      ]},
+      {q:"🧠 The A.I. offers you a leadership deal. You:",icon:"🤔",options:[
+        {icon:"🕵️",t:"Accept to gather intel, feed it to the resistance",p:30},
+        {icon:"❌",t:"Refuse publicly — use it to rally resistance fighters",p:35},
+        {icon:"✅",t:"Accept genuinely — the machines have some valid points",p:-25},
+        {icon:"🤝",t:"Counter-offer: you consult, they leave humans alone",p:10}
+      ]},
+      {q:"🌲 Setting up an off-grid resistance base. Non-negotiables?",icon:"🏕️",options:[
+        {icon:"🏔️",t:"Natural camouflage, Faraday cage, zero digital footprint",p:35},
+        {icon:"📡",t:"Strong comms infrastructure first — coordination wins wars",p:20},
+        {icon:"🍺",t:"Morale infrastructure first — rested teams fight better",p:10},
+        {icon:"🔫",t:"Heavy armament only — deterrence is the strategy",p:5}
+      ]},
+      {q:"🧰 Most valuable non-digital skill in the robot age?",icon:"🔧",options:[
+        {icon:"🔧",t:"Mechanical engineering — fix non-electronic systems",p:35},
+        {icon:"🌱",t:"Sustainable agriculture — food independence is freedom",p:30},
+        {icon:"💻",t:"Coding — communicate with the enemy in their language",p:15},
+        {icon:"🎨",t:"Art — culture will outlast this and all things",p:5}
+      ]},
+      {q:"🚁 Robot drone swarm incoming. Counter-measure?",icon:"🚁",options:[
+        {icon:"🕸️",t:"Carbon fibre mesh net launcher — fries circuits on contact",p:35},
+        {icon:"⚡",t:"Directional EMP to scramble guidance systems",p:30},
+        {icon:"🧲",t:"Large magnet array to pull them off course",p:20},
+        {icon:"🔫",t:"Rifle fire into the sky — lucky shot probability: slim",p:-10}
+      ]},
+      {q:"👥 Resistance morale is zero. Group is fracturing. You:",icon:"😔",options:[
+        {icon:"🎯",t:"Execute a small, winnable sabotage op — momentum",p:35},
+        {icon:"📢",t:"Honest speech about humanity's resilience and stakes",p:25},
+        {icon:"🛏️",t:"Mandatory rest day — rest IS a military strategy",p:15},
+        {icon:"😭",t:"You're also falling apart. Group cry. Therapeutic.",p:-10}
+      ]},
+      {q:"💡 You find robots have ONE critical vulnerability. You:",icon:"💡",options:[
+        {icon:"🌐",t:"Coordinate global simultaneous strike — maximum effect",p:35},
+        {icon:"🔒",t:"Verify it's real first — could be a deliberate trap",p:30},
+        {icon:"🏃",t:"Use it now, alone, before someone else does",p:-10},
+        {icon:"📣",t:"Broadcast it everywhere — share the power",p:-5}
+      ]},
+      {q:"🤝 A human who worked for the robots wants to defect. You:",icon:"🤨",options:[
+        {icon:"🧐",t:"Careful interrogation, verify intel, then cautious welcome",p:35},
+        {icon:"🚫",t:"Never trust a collaborator — absolute hard rule",p:-5},
+        {icon:"🙌",t:"Welcome them fully — redemption is a human value",p:10},
+        {icon:"🕵️",t:"Accept them, feed disinformation back through them",p:25}
+      ]},
+      {q:"🔌 Your analog tools are...",icon:"🔧",options:[
+        {icon:"🗡️",t:"Completely non-electric: hand tools, manual machines",p:35},
+        {icon:"📻",t:"Mix of analog and carefully isolated digital",p:20},
+        {icon:"💻",t:"Mostly digital — you trust your air-gap",p:-10},
+        {icon:"😅",t:"Your phone and that's about it honestly",p:-35}
+      ]},
+      {q:"🌊 Robots have seized water treatment. Your water plan?",icon:"💧",options:[
+        {icon:"💧",t:"Rainwater collection + multi-stage filter + UV treatment",p:35},
+        {icon:"🏞️",t:"River source with portable purification tablets",p:25},
+        {icon:"🧪",t:"Biochemical water testing kit for any source",p:20},
+        {icon:"🚰",t:"Old municipal pipes might still be clean... might",p:-20}
+      ]},
+      {q:"🏗️ Rebuilding post-uprising: humans debate robot policy. You argue:",icon:"🏛️",options:[
+        {icon:"📜",t:"Analog backups and hardware kill-switches mandatory in all AI",p:35},
+        {icon:"📖",t:"Universal tech literacy and critical AI education",p:30},
+        {icon:"🤖",t:"Build better, more loyal robots — try again",p:-15},
+        {icon:"🌿",t:"Ban all computers permanently. Back to nature.",p:-5}
+      ]},
+      {q:"⚙️ Your biggest survival advantage over robots?",icon:"🧠",options:[
+        {icon:"❤️",t:"Empathy and improvisation — we adapt to anything",p:35},
+        {icon:"🤝",t:"Collective community — humans cooperate brilliantly",p:30},
+        {icon:"🎲",t:"Irrationality — robots can't predict truly random choices",p:25},
+        {icon:"😂",t:"We're terrible at logic. Robots can't model that.",p:10}
+      ]},
+      {q:"🏁 One year in — what saved humanity?",icon:"🏁",options:[
+        {icon:"🤝",t:"Each other — community, trust, shared sacrifice",p:35},
+        {icon:"🔧",t:"Going analog — low-tech proved robot-proof",p:30},
+        {icon:"💡",t:"Human creativity and our refusal to follow logic",p:25},
+        {icon:"😤",t:"Spite. Pure, unfiltered, magnificent spite.",p:15}
+      ]}
+    ],
+    careers:[
+      {min:85,face:"⚡😎",name:"⚡ EMP Emperor",desc:"Robots have nightmares about you. Your electromagnetic arsenal and absolute analog mastery made you the most dangerous biological entity on the planet. They're still scared."},
+      {min:70,face:"🔌😤",name:"🔌 Analog Avenger",desc:"When everyone else's tech became a tracking beacon, your old-school approach was a superpower. You won with a hand-crank radio and sheer stubbornness. Gorgeous."},
+      {min:55,face:"💻😌",name:"💻 Rogue Hacker",desc:"You turned their own code against them. Weaponizing Skynet against Skynet was elegant, dangerous, and extremely satisfying to watch from the history books."},
+      {min:40,face:"🔨😅",name:"🔨 Wrench Warrior",desc:"You smashed circuits with righteous fury and mechanical knowledge. More valuable than anyone expected. Your toolbox is the real hero of this story."},
+      {min:25,face:"🚲😬",name:"🚲 Pedal Punk",desc:"Bicycle-powered and completely off-grid. You were free when every connected person became a robot tracking target. Your calves are phenomenal."},
+      {min:0,face:"🔋😂",name:"🔋 Human Battery",desc:"The robots conscripted you as a mobile power source. Ironically you're now essential to their operation. You've leaned into it. Career pivot of the century."}
+    ]
+  },
+
+  climate: {
+    name:"🌊 Climate Collapse", label:"CLIMATE SURVIVAL",
+    mascots:["🌊","🌡️","😱","🔥","🌪️","😰","☀️","🌍"],
+    loaderFaces:["🌊","🌡️","😱","🔥"],
+    questions:[
+      {q:"🌡️ Global temperature just hit 54°C permanently. Your home is...",icon:"😰",options:[
+        {icon:"🏔️",t:"Mountain altitude — cooler, safer, defensible",p:35},
+        {icon:"🏙️",t:"City apartment — infrastructure still (barely) running",p:-15},
+        {icon:"🌊",t:"Coastal — at least you can swim when it floods",p:-25},
+        {icon:"🌿",t:"Rural with land for food production",p:30}
+      ]},
+      {q:"💧 Fresh water is critically scarce everywhere. Your source?",icon:"💧",options:[
+        {icon:"⛰️",t:"Mountain snowmelt via collection and filtration",p:35},
+        {icon:"☁️",t:"Atmospheric water generator (draws from humidity)",p:30},
+        {icon:"🌧️",t:"Rainwater harvesting — when it rains at all",p:25},
+        {icon:"🚰",t:"Municipal tap water (infrastructure is... optimistic)",p:-20}
+      ]},
+      {q:"🔥 Megafires are everywhere. Your fire defense?",icon:"🔥",options:[
+        {icon:"🪣",t:"Clear defensible space + non-combustible building materials",p:35},
+        {icon:"💧",t:"Large water tank system and spray perimeter",p:25},
+        {icon:"🏃",t:"Pre-planned immediate evacuation routes, always ready",p:20},
+        {icon:"🌬️",t:"Pray for rain and blow very hard",p:-40}
+      ]},
+      {q:"🌊 Sea level has risen 3 metres. You navigate by:",icon:"🚣",options:[
+        {icon:"🚣",t:"Boat as primary transport — adapted to the new map",p:35},
+        {icon:"🏊",t:"Swim — you've been training for this",p:-10},
+        {icon:"🛶",t:"Shallow kayak for flooded urban areas",p:25},
+        {icon:"🚗",t:"Drive — some roads are still above water... sometimes",p:-20}
+      ]},
+      {q:"🌪️ Superstorms now hit weekly. Your shelter is:",icon:"🌪️",options:[
+        {icon:"🪨",t:"Reinforced underground bunker with sealed ventilation",p:35},
+        {icon:"🧱",t:"Reinforced concrete structure above ground",p:20},
+        {icon:"🪵",t:"Sturdy wooden cabin — it worked for 100 years",p:-20},
+        {icon:"⛺",t:"A really good tent. Staked deeply.",p:-40}
+      ]},
+      {q:"🌱 Food systems have collapsed. Your farming approach?",icon:"🌾",options:[
+        {icon:"🌡️",t:"Climate-adapted crops: drought-resistant, heat-tolerant",p:35},
+        {icon:"🪴",t:"Indoor vertical farming with LED grow lights",p:30},
+        {icon:"🤝",t:"Community cooperative — shared land, shared harvest",p:25},
+        {icon:"🏪",t:"Keep hitting whatever remains of the supply chain",p:-20}
+      ]},
+      {q:"⚡ Renewable energy or nothing. Your setup?",icon:"⚡",options:[
+        {icon:"☀️",t:"Solar panels + wind turbine + battery bank",p:35},
+        {icon:"💧",t:"Micro-hydro from a stream if available",p:25},
+        {icon:"🚲",t:"Human-powered for critical needs only",p:20},
+        {icon:"⛽",t:"Hold onto fossil fuels while they last",p:-30}
+      ]},
+      {q:"🤝 Climate refugees arrive at your community. You:",icon:"🤝",options:[
+        {icon:"🫂",t:"Welcome and integrate — skills and numbers matter",p:35},
+        {icon:"🧐",t:"Assess skills and resources, then negotiate terms",p:25},
+        {icon:"🚫",t:"Close borders — resources can't stretch further",p:-15},
+        {icon:"📋",t:"Create a fair contribution and integration system",p:30}
+      ]},
+      {q:"🧬 Heat has triggered new disease vectors. Your health plan?",icon:"🦟",options:[
+        {icon:"🪲",t:"Insect screens, protective clothing, prevention first",p:35},
+        {icon:"💊",t:"Stockpile broad-spectrum medications",p:25},
+        {icon:"🌿",t:"Natural remedies and traditional medicine knowledge",p:15},
+        {icon:"🤷",t:"Your immune system has handled everything so far",p:-30}
+      ]},
+      {q:"🏛️ Governments are failing. Your community's governance?",icon:"🏛️",options:[
+        {icon:"🤝",t:"Democratic council with defined roles and accountability",p:35},
+        {icon:"👑",t:"Elect the most capable leader with clear authority",p:20},
+        {icon:"📋",t:"Rotating leadership based on crisis type",p:25},
+        {icon:"🏴",t:"Pure anarchism — rules are the real problem here",p:-25}
+      ]},
+      {q:"🌍 You have resources. Do you share with struggling communities?",icon:"❤️",options:[
+        {icon:"🤝",t:"Yes — mutual aid networks create resilience for everyone",p:35},
+        {icon:"📊",t:"Share surplus only after securing own 6-month reserve",p:20},
+        {icon:"🔄",t:"Trade only — fair exchange, not charity",p:10},
+        {icon:"🙅",t:"No — competition for resources is the new reality",p:-25}
+      ]},
+      {q:"🌱 Long-term ecosystem restoration. Your contribution?",icon:"🌿",options:[
+        {icon:"🌳",t:"Reforestation and soil restoration programs",p:35},
+        {icon:"🌊",t:"Coastal and wetland ecosystem rebuilding",p:25},
+        {icon:"🐝",t:"Pollinator habitat protection and expansion",p:20},
+        {icon:"😅",t:"You're still just trying to survive, honestly",p:5}
+      ]},
+      {q:"😔 Climate grief is destroying community mental health. You:",icon:"😢",options:[
+        {icon:"💙",t:"Establish community processing and support rituals",p:35},
+        {icon:"🎯",t:"Channel grief into action — purpose heals",p:30},
+        {icon:"💪",t:"Tell people to toughen up — survival needs focus",p:-20},
+        {icon:"🎨",t:"Create communal art documenting what was lost",p:20}
+      ]},
+      {q:"🔬 A scientist says they have a geoengineering fix. You:",icon:"🧪",options:[
+        {icon:"🧐",t:"Demand full peer review and impact studies first",p:35},
+        {icon:"🚀",t:"Trial it immediately — worse than this is hard to imagine",p:-10},
+        {icon:"🤝",t:"Support it with full community consultation",p:25},
+        {icon:"🙅",t:"No more human intervention — we caused this",p:10}
+      ]},
+      {q:"🌅 In 20 years, what does survival look like?",icon:"🌅",options:[
+        {icon:"🌿",t:"Regenerative communities living within planetary limits",p:35},
+        {icon:"🏙️",t:"High-tech adaptation cities with climate control domes",p:20},
+        {icon:"🌍",t:"Global cooperation framework for resource sharing",p:30},
+        {icon:"😤",t:"Whatever it is, you'll be very tan and very tired",p:5}
+      ]},
+      {q:"🧰 Your most essential climate survival skill?",icon:"🔧",options:[
+        {icon:"💧",t:"Water sourcing and purification in any condition",p:35},
+        {icon:"🌾",t:"Food growing in extreme heat and poor soil",p:30},
+        {icon:"🏗️",t:"Building heat-resilient and storm-proof structures",p:25},
+        {icon:"🤝",t:"Community organizing — alone you're dead, together maybe not",p:30}
+      ]},
+      {q:"🌡️ The heat is affecting your decision-making. You:",icon:"😵",options:[
+        {icon:"🧊",t:"Strict rest schedule, hydration discipline, shade protocol",p:35},
+        {icon:"💪",t:"Push through — you're tough and it'll pass",p:-25},
+        {icon:"🌬️",t:"Passive cooling: earth shelters, thermal mass, airflow",p:30},
+        {icon:"😴",t:"Sleep during peak heat, work at night only",p:25}
+      ]},
+      {q:"🚗 Transport in a climate-collapsed world?",icon:"🚗",options:[
+        {icon:"🚲",t:"Bicycle — zero emissions, no fuel, reliable",p:35},
+        {icon:"⚡",t:"Solar-charged electric vehicle for longer distances",p:25},
+        {icon:"🐴",t:"Animal power — horses, donkeys, the old ways",p:20},
+        {icon:"🚶",t:"Walking — slowest but most sustainable",p:15}
+      ]},
+      {q:"☀️ Solar panels are your primary power. Risk plan for sandstorms?",icon:"🌪️",options:[
+        {icon:"🔧",t:"Hinged covers, sealed systems, storm-position protocol",p:35},
+        {icon:"🔋",t:"Large battery reserves to outlast storm periods",p:25},
+        {icon:"📦",t:"Portable backup panels in protective storage",p:20},
+        {icon:"🤷",t:"Clean them after — it's fine, chill",p:-15}
+      ]},
+      {q:"🌍 What does surviving climate collapse actually mean to you?",icon:"🌍",options:[
+        {icon:"🌱",t:"Building a world that doesn't repeat this mistake",p:35},
+        {icon:"🤝",t:"Protecting and sustaining your community and loved ones",p:30},
+        {icon:"📚",t:"Preserving human knowledge and culture through the chaos",p:25},
+        {icon:"😤",t:"Spite. You told everyone this would happen. VINDICATED.",p:10}
+      ]}
+    ],
+    careers:[
+      {min:85,face:"🌊😎",name:"🌊 Climate Architect",desc:"You didn't just survive the collapse — you designed the world that came after. Regenerative systems, community councils, and sustainable food webs. They'll name a biome after you."},
+      {min:70,face:"🌱😤",name:"🌱 Ecosystem Reviver",desc:"While others mourned what was lost, you planted the first seeds of what comes next. Your hands are perpetually dirty. You wouldn't have it any other way."},
+      {min:55,face:"☀️😌",name:"☀️ Solar Sage",desc:"Energy independence and calm problem-solving made you indispensable. You kept the lights on when everyone else's battery died. In every sense of the phrase."},
+      {min:40,face:"🚣😅",name:"🚣 Flood Navigator",desc:"The new map of the world is partly your mental geography. You know which rooftops are above waterline and which aren't. Essential knowledge in the new normal."},
+      {min:25,face:"🌿😬",name:"🌿 Barely Botanical",desc:"Your garden produces enough to survive on, if you're optimistic about serving sizes. You've mastered the art of making drought-resistant lentils exciting. Almost."},
+      {min:0,face:"🌊😂",name:"🌊 Beautiful Flotsam",desc:"You became part of the great redistribution. Your stuff is spread across several continents now. Technically you're the most widely traveled person in the apocalypse."}
+    ]
+  },
+
+  pandemic: {
+    name:"🦠 Super Pandemic", label:"PANDEMIC SURVIVAL",
+    mascots:["🦠","😷","🧬","😱","💉","😰","🔬","🏥"],
+    loaderFaces:["🦠","😷","🤯","😵‍💫"],
+    questions:[
+      {q:"🦠 Patient Zero is confirmed in your city. First action?",icon:"😱",options:[
+        {icon:"🏠",t:"Immediately voluntary quarantine with 2-week supply",p:35},
+        {icon:"🛒",t:"Rush to supermarket to stock up with everyone else",p:-25},
+        {icon:"📺",t:"Wait for official guidance — they'll have a plan",p:-10},
+        {icon:"🚗",t:"Drive to a rural area before lockdown hits",p:20}
+      ]},
+      {q:"😷 Mask shortage. Your improvised protection?",icon:"😷",options:[
+        {icon:"🧵",t:"Multi-layer cotton mask with filter insert — tested",p:35},
+        {icon:"🧴",t:"Surgical mask doubled up for extra filtration",p:25},
+        {icon:"🩺",t:"Full DIY face shield and sealed goggles",p:20},
+        {icon:"🧣",t:"Scarf wrapped around your face — it's something",p:-10}
+      ]},
+      {q:"💉 A vaccine is developed fast. You:",icon:"💉",options:[
+        {icon:"🔬",t:"Wait for peer-reviewed safety data, then get it",p:25},
+        {icon:"✅",t:"Take it immediately — herd immunity saves everyone",p:30},
+        {icon:"🧐",t:"Research it thoroughly before deciding",p:20},
+        {icon:"🙅",t:"Refuse — your immune system is your weapon",p:-35}
+      ]},
+      {q:"🏠 Two weeks in isolation. Mental health strategy?",icon:"🧠",options:[
+        {icon:"📅",t:"Strict daily routine: work, exercise, social calls, sleep",p:35},
+        {icon:"🎮",t:"Gaming 18 hours a day — quarantine productivity",p:-10},
+        {icon:"🧘",t:"Meditation, journaling, deliberate digital breaks",p:25},
+        {icon:"🍷",t:"Drink slightly more wine than is medically advisable",p:-20}
+      ]},
+      {q:"🧬 The virus mutates rapidly. How do you track variants?",icon:"🔬",options:[
+        {icon:"📊",t:"Follow scientific databases and epidemiologists directly",p:35},
+        {icon:"📱",t:"Social media updates — fast if not always accurate",p:-15},
+        {icon:"📻",t:"WHO and CDC broadcast updates only",p:25},
+        {icon:"😤",t:"They've been wrong before — just watch symptoms locally",p:-10}
+      ]},
+      {q:"🏥 Hospitals are overwhelmed. Minor injury — you:",icon:"🩺",options:[
+        {icon:"🩹",t:"Treat it yourself: clean, antiseptic, proper bandaging",p:35},
+        {icon:"🏥",t:"Go to hospital — minor infection risks aren't minor",p:-20},
+        {icon:"🌿",t:"Natural remedies and careful monitoring at home",p:15},
+        {icon:"📞",t:"Telemedicine consultation first, then decide",p:25}
+      ]},
+      {q:"🌬️ Airborne transmission confirmed. Your ventilation plan?",icon:"💨",options:[
+        {icon:"🌬️",t:"HEPA air purifiers + maximum outdoor air circulation",p:35},
+        {icon:"🪟",t:"Windows open when possible, CO2 monitor for guidance",p:25},
+        {icon:"🚪",t:"Seal everything — hermetic is the goal",p:-15},
+        {icon:"🌿",t:"Lots of plants — photosynthesis is probably enough",p:-20}
+      ]},
+      {q:"🛒 Supply chains are breaking. Food priority?",icon:"🛒",options:[
+        {icon:"🥫",t:"Calorie-dense, long-shelf-life staples: grains, legumes",p:35},
+        {icon:"🥗",t:"Fresh produce while available for immune support",p:20},
+        {icon:"🌱",t:"Fast-growing home garden: sprouts, microgreens",p:25},
+        {icon:"🍕",t:"Frozen comfort food — mental health matters here",p:5}
+      ]},
+      {q:"🤝 A sick neighbour needs help. You:",icon:"💙",options:[
+        {icon:"🥣",t:"Leave supplies at their door with safety PPE on",p:35},
+        {icon:"🤗",t:"Go in and help directly — compassion over risk",p:-15},
+        {icon:"📞",t:"Coordinate care remotely via calls and community network",p:25},
+        {icon:"🚪",t:"Stay away completely — protect yourself first",p:-10}
+      ]},
+      {q:"🧪 Experimental treatment is available. You:",icon:"🧪",options:[
+        {icon:"🔬",t:"Research the trial data thoroughly, consult a doctor",p:35},
+        {icon:"✅",t:"Volunteer for the clinical trial — data helps everyone",p:20},
+        {icon:"🙅",t:"Refuse experimental treatment — stick to proven care",p:10},
+        {icon:"🏪",t:"Try to acquire it outside official channels",p:-20}
+      ]},
+      {q:"📡 Misinformation is everywhere. How do you navigate it?",icon:"😤",options:[
+        {icon:"🔬",t:"Only peer-reviewed sources and established health orgs",p:35},
+        {icon:"🤔",t:"Cross-reference multiple credible sources before sharing",p:30},
+        {icon:"👥",t:"Trust local community leaders you know personally",p:10},
+        {icon:"📱",t:"Share what feels right — gut instinct is valid",p:-35}
+      ]},
+      {q:"🌍 International travel bans. You're stranded abroad. Plan?",icon:"✈️",options:[
+        {icon:"🏠",t:"Register with your embassy, find safe long-term housing",p:35},
+        {icon:"🚗",t:"Overland route home — borders will open eventually",p:15},
+        {icon:"🤝",t:"Connect with expat community and local support networks",p:25},
+        {icon:"✈️",t:"Bribe your way onto the last flight out",p:-10}
+      ]},
+      {q:"💉 You recover and may have immunity. You:",icon:"⚕️",options:[
+        {icon:"🤝",t:"Volunteer for essential services — you're lower risk now",p:35},
+        {icon:"🔬",t:"Donate blood plasma for antibody treatment research",p:30},
+        {icon:"😤",t:"Finally go outside without a mask — freedom!",p:-15},
+        {icon:"😴",t:"Rest completely — your body went through a lot",p:15}
+      ]},
+      {q:"🏘️ Your community wants to end lockdown early. You say:",icon:"📢",options:[
+        {icon:"📊",t:"Show the data — R-number must be below 1 first",p:35},
+        {icon:"🔄",t:"Propose a careful phased reopening with monitoring",p:30},
+        {icon:"😤",t:"Economic damage is also a health crisis — compromise",p:10},
+        {icon:"🎉",t:"Sure — everyone's tired, let's just do it",p:-30}
+      ]},
+      {q:"🧬 New variant is 3x more transmissible. Your response?",icon:"😰",options:[
+        {icon:"🔒",t:"Immediately tighten all precautions regardless of fatigue",p:35},
+        {icon:"📊",t:"Monitor severity data before changing behaviour",p:20},
+        {icon:"💉",t:"Prioritise getting the updated booster immediately",p:25},
+        {icon:"😤",t:"Pandemic fatigue is real — can't live like this forever",p:-20}
+      ]},
+      {q:"🌱 Post-pandemic — what must change?",icon:"🌍",options:[
+        {icon:"🏥",t:"Massively strengthen global public health infrastructure",p:35},
+        {icon:"🔬",t:"Permanent pathogen surveillance and rapid response systems",p:30},
+        {icon:"🌿",t:"Reduce human-animal interface to prevent future spillovers",p:25},
+        {icon:"😤",t:"Nothing — humanity needs to just be tougher",p:-20}
+      ]},
+      {q:"😷 Months of masking. Your compliance?",icon:"😤",options:[
+        {icon:"✅",t:"Full consistent compliance — protect others, protect yourself",p:35},
+        {icon:"🏠",t:"Only outdoors or in crowds, indoor ventilation guides me",p:20},
+        {icon:"😞",t:"Compliant but exhausted — it's heavy psychologically",p:15},
+        {icon:"🙅",t:"Your natural breathing cannot be compromised. It just can't.",p:-35}
+      ]},
+      {q:"📞 Contact tracing app: do you install it?",icon:"📱",options:[
+        {icon:"✅",t:"Immediately — collective protection requires data sharing",p:35},
+        {icon:"🤔",t:"After reading the privacy policy thoroughly",p:20},
+        {icon:"🔒",t:"Only if it's fully anonymous with open-source code",p:15},
+        {icon:"🙅",t:"Absolutely not — Big Pharma is NOT tracking your walks",p:-25}
+      ]},
+      {q:"🏡 Long lockdown: your household dynamics?",icon:"🏡",options:[
+        {icon:"📅",t:"Clear schedules, designated spaces, intentional check-ins",p:35},
+        {icon:"💬",t:"Honest regular communication about stress and needs",p:30},
+        {icon:"🎯",t:"Shared projects and goals to create collective purpose",p:25},
+        {icon:"🎧",t:"Headphones in at all times — coexistence by avoidance",p:-10}
+      ]},
+      {q:"🌅 Pandemic ends. First thing you do?",icon:"🌅",options:[
+        {icon:"🤗",t:"Hug every person you love without thinking twice",p:25},
+        {icon:"🌍",t:"Immediately campaign for pandemic preparedness reform",p:35},
+        {icon:"🍽️",t:"Eat at every restaurant you missed, in one glorious week",p:15},
+        {icon:"😴",t:"Sleep for approximately two months. You have earned it.",p:20}
+      ]}
+    ],
+    careers:[
+      {min:85,face:"🦠😎",name:"🦠 Epidemiology Hero",desc:"You understood R-numbers, variant nomenclature, and PPE grading before most people could spell them. You were the calm expert your community needed and somehow didn't panic."},
+      {min:70,face:"🏥😤",name:"🏥 Field Medic",desc:"No hospital? No problem. Your improvised treatment protocols kept people alive and your triage instincts were frighteningly accurate. You now wash your hands for exactly 20 seconds, always."},
+      {min:55,face:"🌿😌",name:"🌿 Community Anchor",desc:"You held the neighbourhood together when institutions failed. Food distribution, mental health check-ins, supply runs. You didn't cure anything. You did everything else."},
+      {min:40,face:"📦😅",name:"📦 Prepper Vindicated",desc:"Everyone laughed at your stockpile in 2019. Nobody's laughing now. Your toilet paper reserves alone made you a community legend. The satisfaction is immense."},
+      {min:25,face:"😷😬",name:"😷 Anxious Survivor",desc:"You made it through by following every rule while spiralling internally. Your anxiety was, technically, appropriate. Your hand sanitiser collection is now a museum exhibit."},
+      {min:0,face:"🦠😂",name:"🦠 Patient Zero's Friend",desc:"You were at the party. You know which party. You don't need to say it. In your defence, nobody expected that to be the actual apocalypse trigger. In everyone else's defence, they really did."}
+    ]
+  }
+};
+
+/* ===== STATE ===== */
+let currentMode = 'nuclear';
+let currentCountry = 'usa';
+let currentQ = 0;
+let score = 50;
+let goodCount = 0;
+let badCount = 0;
+const TOTAL_Q = 20;
+
+/* ===== INIT ===== */
+(function init() {
+  createFloaters();
+  startHeroFaceLoop();
+})();
+
+function createFloaters() {
+  const emojis = ['💣','☢️','🧟','👽','🤖','⚡','🔋','🌍','🛸','🔫','🪓','🧪','📻','🌊','🦠','😱'];
+  const wrap = document.getElementById('floaters');
+  for(let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'floater';
+    el.textContent = emojis[i % emojis.length];
+    el.style.left = (Math.random() * 95) + '%';
+    el.style.animationDuration = (14 + Math.random() * 18) + 's';
+    el.style.animationDelay = (Math.random() * 14) + 's';
+    wrap.appendChild(el);
+  }
+}
+
+const heroFaces = ['😱','🤯','😰','🫠','💀','🤡','😵','😳','🙀','😬'];
+let heroFaceIdx = 0;
+function startHeroFaceLoop() {
+  setInterval(() => {
+    heroFaceIdx = (heroFaceIdx + 1) % heroFaces.length;
+    const el = document.getElementById('hero-face');
+    if(el) el.textContent = heroFaces[heroFaceIdx];
+  }, 1400);
+}
+
+/* ===== COUNTRY & MODE ===== */
+function selectCountry(card) {
+  document.querySelectorAll('.country-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  currentCountry = card.dataset.country;
+}
+
+function selectMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.mode-card[data-mode="${mode}"]`).classList.add('active');
+}
+
+/* ===== QUIZ ===== */
+function startQuiz() {
+  currentQ = 0; score = 50; goodCount = 0; badCount = 0;
+  document.getElementById('home-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('loader-section').style.display = 'none';
+  document.getElementById('quiz-section').style.display = 'block';
+  showQuestion();
+}
+
+function showQuestion() {
+  if(currentQ >= TOTAL_Q) { showLoader(); return; }
+  const modeData = modes[currentMode];
+  const qData = modeData.questions[currentQ];
+  const pct = Math.round((currentQ / TOTAL_Q) * 100);
+  const mascot = modeData.mascots[currentQ % modeData.mascots.length];
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `Question ${currentQ + 1} of ${TOTAL_Q}`;
+
+  const optHTML = qData.options.map(o =>
+    `<button class="opt-btn" onclick="answer(${o.p}, this)">
+      <span class="oi">${o.icon}</span><span>${o.t}</span>
+    </button>`
+  ).join('');
+
+  document.getElementById('q-container').innerHTML = `
+    <div class="q-card">
+      <span class="q-mascot">${mascot}</span>
+      <div class="q-num">QUESTION ${currentQ + 1} / ${TOTAL_Q}</div>
+      <div class="q-text">${qData.q}</div>
+      <div class="options">${optHTML}</div>
+    </div>`;
+}
+
+function answer(pts, btn) {
+  document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'none');
+  if(pts >= 25) { btn.classList.add('good'); goodCount++; }
+  else if(pts < 0) { btn.classList.add('bad'); badCount++; }
+  else { btn.classList.add('ok'); }
+  score = Math.max(0, Math.min(100, score + pts));
+  currentQ++;
+  setTimeout(showQuestion, 650);
+}
+
+/* ===== LOADER ===== */
+const loaderData = [
+  ["CALCULATING YOUR DOOM...","Weighing 20 questionable decisions against survival math..."],
+  ["RUNNING SIMULATIONS...","87 parallel timelines processed. Most are bad. Checking the rest."],
+  ["CONSULTING THE ORACLE...","The oracle is also hiding in a bunker. Hold please."],
+  ["ASSESSING THREAT LEVEL...","Cross-referencing your answers with worst case scenarios..."],
+  ["COMPUTING DESTINY...","Dividing your survival instinct by your poor life choices..."]
+];
+
+function showLoader() {
+  document.getElementById('quiz-section').style.display = 'none';
+  document.getElementById('loader-section').style.display = 'block';
+
+  const modeData = modes[currentMode];
+  const face = modeData.loaderFaces[Math.floor(Math.random() * modeData.loaderFaces.length)];
+  const msg = loaderData[Math.floor(Math.random() * loaderData.length)];
+
+  document.getElementById('loader-face').textContent = face;
+  document.getElementById('loader-txt').textContent = msg[0];
+  document.getElementById('loader-sub').textContent = msg[1];
+  setTimeout(showResult, 2400);
+}
+
+/* ===== RESULTS ===== */
+function showResult() {
+  document.getElementById('loader-section').style.display = 'none';
+
+  const pct = Math.max(0, Math.min(100, Math.round(score)));
+  const modeData = modes[currentMode];
+  const career = modeData.careers.find(c => pct >= c.min) || modeData.careers[modeData.careers.length - 1];
+  const isGood = pct >= 50;
+
+  // Pick a random roast for the country
+  const roasts = countryRoasts[currentCountry] || countryRoasts['other'];
+  const roast = roasts[Math.floor(Math.random() * roasts.length)];
+
+  document.getElementById('res-mode').textContent = modeData.label;
+  document.getElementById('res-face').textContent = career.face;
+  document.getElementById('res-career').textContent = career.name;
+  document.getElementById('res-desc').textContent = career.desc;
+  document.getElementById('res-roast').textContent = roast;
+
+  const pctEl = document.getElementById('res-pct');
+  pctEl.textContent = pct + '%';
+  pctEl.className = 'survival-pct' + (isGood ? '' : ' low');
+
+  const meter = document.getElementById('res-meter');
+  meter.style.background = isGood
+    ? 'linear-gradient(90deg,#3DD68C,#4FC3F7)'
+    : 'linear-gradient(90deg,#FF3B3B,#FF8C00)';
+
+  const neutralCount = TOTAL_Q - goodCount - badCount;
+  const grade = pct >= 80 ? '🌟 Elite' : pct >= 60 ? '✅ Solid' : pct >= 40 ? '⚠️ Risky' : '❌ Grim';
+
+  document.getElementById('res-stats').innerHTML = `
+    <div class="stat-badge"><span class="sbi">✅</span><div class="sbv">${goodCount}</div><div class="sbl">SMART MOVES</div></div>
+    <div class="stat-badge"><span class="sbi">❌</span><div class="sbv">${badCount}</div><div class="sbl">BLUNDERS</div></div>
+    <div class="stat-badge"><span class="sbi">😐</span><div class="sbv">${neutralCount}</div><div class="sbl">MEH CHOICES</div></div>
+    <div class="stat-badge"><span class="sbi">🏅</span><div class="sbv">${grade.split(' ')[0]}</div><div class="sbl">${grade.split(' ')[1]||'RANK'}</div></div>
+  `;
+
+  document.getElementById('result-section').style.display = 'block';
+  setTimeout(() => { meter.style.width = pct + '%'; }, 200);
+
+  if(isGood) spawnConfetti();
+}
+
+/* ===== CONFETTI ===== */
+function spawnConfetti() {
+  const colors = ['#FFD700','#FF3B3B','#3DD68C','#4FC3F7','#C77DFF','#FF8C00'];
+  for(let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;top:-20px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      transform:rotate(${Math.random()*360}deg);
+      animation-duration:${1.8+Math.random()*2.5}s;
+      animation-delay:${Math.random()*1}s;
+      width:${8+Math.random()*8}px;height:${10+Math.random()*12}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+/* ===== SHARE ===== */
+function shareResult() {
+  const pct = Math.max(0, Math.min(100, Math.round(score)));
+  const modeData = modes[currentMode];
+  const career = modeData.careers.find(c => pct >= c.min) || modeData.careers[modeData.careers.length-1];
+  const countryFlag = document.querySelector(`.country-card[data-country="${currentCountry}"] .cc-flag`)?.textContent || '🌍';
+  const text = `${countryFlag} I scored ${pct}% survival odds in ${modeData.name}!\nMy title: ${career.name}\nSmart moves: ${goodCount} | Blunders: ${badCount}\n#SurvivalCalculator #Apocalypse`;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+function goHome() {
+  ['result-section','quiz-section','loader-section'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('home-section').style.display = 'block';
+}
+</script>
+</body>
+</html>
